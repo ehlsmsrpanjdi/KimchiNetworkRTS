@@ -4,11 +4,6 @@ using Unity.Netcode;
 public class PlayerResource : NetworkBehaviour
 {
     // ========== 각 자원별 NetworkVariable ==========
-    public NetworkVariable<int> Gold = new NetworkVariable<int>(
-        100,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server
-    );
 
     public NetworkVariable<int> Wood = new NetworkVariable<int>(
         100,
@@ -16,7 +11,7 @@ public class PlayerResource : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
-    public NetworkVariable<int> Stone = new NetworkVariable<int>(
+    public NetworkVariable<int> Iron = new NetworkVariable<int>(
         100,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server
@@ -30,16 +25,14 @@ public class PlayerResource : NetworkBehaviour
         base.OnNetworkSpawn();
 
         // 각 자원 변경 이벤트 등록
-        Gold.OnValueChanged += (prev, next) => OnResourceValueChanged(ResourceType.Gold, next);
         Wood.OnValueChanged += (prev, next) => OnResourceValueChanged(ResourceType.Wood, next);
-        Stone.OnValueChanged += (prev, next) => OnResourceValueChanged(ResourceType.Stone, next);
+        Iron.OnValueChanged += (prev, next) => OnResourceValueChanged(ResourceType.Iron, next);
 
         // 초기값 UI 업데이트
         if (IsOwner)
         {
-            OnResourceChanged?.Invoke(ResourceType.Gold, Gold.Value);
             OnResourceChanged?.Invoke(ResourceType.Wood, Wood.Value);
-            OnResourceChanged?.Invoke(ResourceType.Stone, Stone.Value);
+            OnResourceChanged?.Invoke(ResourceType.Iron, Iron.Value);
         }
     }
 
@@ -77,9 +70,8 @@ public class PlayerResource : NetworkBehaviour
     {
         return type switch
         {
-            ResourceType.Gold => Gold.Value,
             ResourceType.Wood => Wood.Value,
-            ResourceType.Stone => Stone.Value,
+            ResourceType.Iron => Iron.Value,
             _ => 0
         };
     }
@@ -130,14 +122,11 @@ public class PlayerResource : NetworkBehaviour
 
         switch (type)
         {
-            case ResourceType.Gold:
-                Gold.Value -= amount;
-                break;
             case ResourceType.Wood:
                 Wood.Value -= amount;
                 break;
-            case ResourceType.Stone:
-                Stone.Value -= amount;
+            case ResourceType.Iron:
+                Iron.Value -= amount;
                 break;
         }
     }
@@ -156,14 +145,11 @@ public class PlayerResource : NetworkBehaviour
         {
             switch (cost.resourceType)
             {
-                case ResourceType.Gold:
-                    Gold.Value -= cost.amount;
-                    break;
                 case ResourceType.Wood:
                     Wood.Value -= cost.amount;
                     break;
-                case ResourceType.Stone:
-                    Stone.Value -= cost.amount;
+                case ResourceType.Iron:
+                    Iron.Value -= cost.amount;
                     break;
             }
         }
@@ -181,14 +167,11 @@ public class PlayerResource : NetworkBehaviour
     {
         switch (type)
         {
-            case ResourceType.Gold:
-                Gold.Value += amount;
-                break;
             case ResourceType.Wood:
                 Wood.Value += amount;
                 break;
-            case ResourceType.Stone:
-                Stone.Value += amount;
+            case ResourceType.Iron:
+                Iron.Value += amount;
                 break;
         }
     }

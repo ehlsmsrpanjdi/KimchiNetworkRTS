@@ -6,17 +6,68 @@ public class BuildingManager : NetworkBehaviour
 {
     public static BuildingManager Instance;
 
-    private void Awake()
+    private Dictionary<ulong, List<BuildingBase>> playerBuildings = new Dictionary<ulong, List<BuildingBase>>();
+
+    // ✅ 모든 건물 리스트 (빠른 접근용)
+    private List<BuildingBase> allBuildings = new List<BuildingBase>();
+
+    void Awake()
     {
-        Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
-    // 서버에서만 쓰는 관리 리스트 (플레이어별 건물)
-    private readonly Dictionary<ulong, List<BuildingBase>> playerBuildings = new();
+    // ========== 건물 조회 ==========
 
     /// <summary>
-    /// 건물 설치 (서버 RPC)
+    /// 모든 건물 가져오기 (읽기 전용)
     /// </summary>
+    public List<BuildingBase> GetAllBuildings()
+    {
+        return allBuildings;
+    }
+
+    /// <summary>
+    /// 살아있는 건물만 가져오기 (null 체크 + HP > 0)
+    /// </summary>
+    public List<BuildingBase> GetAliveBuildings()
+    {
+        return allBuildings.FindAll(b => b != null && b.gameObject.activeSelf && b.stat.currentHP.Value > 0);
+    }
+
+    /// <summary>
+    /// 특정 플레이어의 건물 리스트
+    /// </summary>
+    public List<BuildingBase> GetPlayerBuildings(ulong playerID)
+    {
+        if (playerBuildings.TryGetValue(playerID, out List<BuildingBase> buildings))
+        {
+            return buildings;
+        }
+        return new List<BuildingBase>();
+    }
+
+    /// <summary>
+    /// 주기적으로 파괴된 건물 정리 (선택사항)
+    /// </summary>
+    public void CleanupDestroyedBuildings()
+    {
+        allBuildings.RemoveAll(b => b == null || !b.gameObject.activeSelf);
+
+        foreach (var kvp in playerBuildings)
+        {
+            kvp.Value.RemoveAll(b => b == null || !b.gameObject.activeSelf);
+        }
+    }
+
+    // ========== 건물 배치 ==========
+
     [Rpc(SendTo.Server)]
     public void PlaceBuildingServerRpc(int buildingID, Vector3 worldPos, Vector2Int gridPos, ulong playerID)
     {
@@ -37,6 +88,7 @@ public class BuildingManager : NetworkBehaviour
             return;
         }
 
+        // 서버에서 직접 Instantiate
         GameObject buildingGo = Instantiate(prefab, worldPos, Quaternion.identity);
         buildingGo.name = prefabName;
 
@@ -56,7 +108,10 @@ public class BuildingManager : NetworkBehaviour
             return;
         }
 
+        // 초기화
         buildingBase.Initialize(buildingID, playerID, gridPos);
+
+        // Spawn
         netObj.Spawn();
 
         // ✅ Player에 건물 등록
@@ -67,7 +122,10 @@ public class BuildingManager : NetworkBehaviour
             LogHelper.Log($"✅ Building registered to Player {playerID}");
         }
 
-        // 서버 관리 리스트에 추가
+        // ✅ 전체 리스트에 추가
+        allBuildings.Add(buildingBase);
+
+        // 플레이어별 리스트에 추가
         if (!playerBuildings.ContainsKey(playerID))
         {
             playerBuildings[playerID] = new List<BuildingBase>();
@@ -76,6 +134,8 @@ public class BuildingManager : NetworkBehaviour
 
         LogHelper.Log($"✅ Building placed: {data.displayName} at {gridPos} for player {playerID}");
     }
+
+    // ========== 건물 삭제 ==========
 
     [Rpc(SendTo.Server)]
     public void RemoveBuildingServerRpc(NetworkObjectReference buildingRef, ulong playerID)
@@ -109,7 +169,10 @@ public class BuildingManager : NetworkBehaviour
             LogHelper.Log($"✅ Building unregistered from Player {playerID}");
         }
 
-        // 서버 관리 리스트에서 제거
+        // ✅ 전체 리스트에서 제거
+        allBuildings.Remove(building);
+
+        // 플레이어별 리스트에서 제거
         if (playerBuildings.ContainsKey(playerID))
         {
             playerBuildings[playerID].Remove(building);
@@ -131,32 +194,16 @@ public class BuildingManager : NetworkBehaviour
         LogHelper.Log($"✅ Building removed: {building.buildingID}");
     }
 
-    /// <summary>
-    /// BuildingID → Prefab 이름 매핑
-    /// ✅ TODO: 나중에 엑셀 데이터로 관리
-    /// </summary>
+    // ========== Helper ==========
+
     string GetPrefabNameByID(int buildingID)
     {
-        switch (buildingID)
+        return buildingID switch
         {
-            case 1: return "AttackTower";
-            case 2: return "GoldMine";
-            case 3: return "Wall";
-            default:
-                LogHelper.LogError($"Unknown buildingID: {buildingID}");
-                return null;
-        }
-    }
-
-    /// <summary>
-    /// 플레이어의 건물 리스트 가져오기
-    /// </summary>
-    public List<BuildingBase> GetPlayerBuildings(ulong playerID)
-    {
-        if (playerBuildings.ContainsKey(playerID))
-        {
-            return playerBuildings[playerID];
-        }
-        return new List<BuildingBase>();
+            1 => "AttackTower",
+            2 => "GoldMine",
+            3 => "Wall",
+            _ => "AttackTower"
+        };
     }
 }

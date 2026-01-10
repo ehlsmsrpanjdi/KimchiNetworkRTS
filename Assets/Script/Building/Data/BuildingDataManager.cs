@@ -38,8 +38,8 @@ public class BuildingDataManager
             sizeY = 1,
             constructionCosts = new ResourceCost[]
             {
-            new ResourceCost { resourceType = ResourceType.Gold, amount = 50 },
-            new ResourceCost { resourceType = ResourceType.Wood, amount = 20 }
+            new ResourceCost { resourceType = ResourceType.Wood, amount = 20 },
+            new ResourceCost { resourceType = ResourceType.Iron, amount = 50 },
             },
             baseMaxHP = 500,
             isAttackTower = true,
@@ -56,12 +56,11 @@ public class BuildingDataManager
             sizeY = 2,
             constructionCosts = new ResourceCost[]
             {
-            new ResourceCost { resourceType = ResourceType.Gold, amount = 100 },
             new ResourceCost { resourceType = ResourceType.Wood, amount = 50 },
-            new ResourceCost { resourceType = ResourceType.Stone, amount = 30 }
+            new ResourceCost { resourceType = ResourceType.Iron, amount = 100 },
             },
             baseMaxHP = 300,
-            resourceType = ResourceType.Gold,
+            resourceType = ResourceType.Iron,
             baseResourceRate = 10
         };
 
@@ -75,7 +74,7 @@ public class BuildingDataManager
             sizeY = 3,
             constructionCosts = new ResourceCost[]
             {
-            new ResourceCost { resourceType = ResourceType.Stone, amount = 80 }
+            new ResourceCost { resourceType = ResourceType.Iron, amount = 80 }
             },
             baseMaxHP = 1000
         };

@@ -16,8 +16,6 @@ public class PlayerManager
     }
 
     private Dictionary<ulong, Player> players = new Dictionary<ulong, Player>();
-
-    // ✅ 로컬 플레이어 캐싱
     private Player localPlayer;
 
     public void AddPlayer(ulong playerID, Player player)
@@ -29,7 +27,6 @@ public class PlayerManager
         }
     }
 
-    // ✅ 로컬 플레이어 설정
     public void SetLocalPlayer(Player player)
     {
         localPlayer = player;
@@ -54,9 +51,28 @@ public class PlayerManager
         return null;
     }
 
-    // ✅ 로컬 플레이어 가져오기
     public Player GetLocalPlayer()
     {
         return localPlayer;
+    }
+
+    // ✅ 모든 플레이어 가져오기
+    public List<Player> GetAllPlayers()
+    {
+        return new List<Player>(players.Values);
+    }
+
+    // ✅ 살아있는 플레이어만 가져오기
+    public List<Player> GetAlivePlayers()
+    {
+        List<Player> alivePlayers = new List<Player>();
+        foreach (var player in players.Values)
+        {
+            if (player != null && player.gameObject.activeSelf)
+            {
+                alivePlayers.Add(player);
+            }
+        }
+        return alivePlayers;
     }
 }

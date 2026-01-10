@@ -14,9 +14,8 @@ public enum BuildingCategory
 // ========== 자원 종류 ==========
 public enum ResourceType
 {
-    Gold,
     Wood,
-    Stone
+    Iron,
 }
 
 // ========== 공격 타입 ==========

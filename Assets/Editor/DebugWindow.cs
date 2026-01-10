@@ -1,37 +1,27 @@
-﻿using TMPro;
+﻿using UnityEngine;
 using UnityEditor;
-using UnityEngine;
-using Unity.Netcode;
 
 public class DebugWindow : EditorWindow
 {
+    private Vector2Int gridPos = new Vector2Int(5, 5);
 
-    private BuildingBase lastPlacedBuilding; // 마지막 설치한 건물 저장
-
-
-    TMP_FontAsset targetFont;
-    private float debugFloatValue = 0f;
-    private Vector2Int gridPos = new Vector2Int(5, 5); // 기본 그리드 위치
-
-    [MenuItem("Window/DebugWindow")]
+    [MenuItem("Tools/Debug Window")]
     public static void ShowWindow()
     {
-        GetWindow<DebugWindow>("My Editor");
+        GetWindow<DebugWindow>("Debug Window");
     }
 
     void OnGUI()
     {
-        GUILayout.Space(10);
-        GUILayout.Label("Building Test", EditorStyles.boldLabel);
-
-        // 그리드 위치 입력
-        GUILayout.Label("Grid Position:");
-        gridPos.x = EditorGUILayout.IntField("X:", gridPos.x);
-        gridPos.y = EditorGUILayout.IntField("Y:", gridPos.y);
+        GUILayout.Label("=== Grid Position ===", EditorStyles.boldLabel);
+        gridPos.x = EditorGUILayout.IntField("Grid X:", gridPos.x);
+        gridPos.y = EditorGUILayout.IntField("Grid Y:", gridPos.y);
 
         GUILayout.Space(10);
 
-        // 건물 설치 버튼들
+        // ========== 건물 배치 (직접) ==========
+        GUILayout.Label("=== Place Building (Direct) ===", EditorStyles.boldLabel);
+
         if (GUILayout.Button("Place Attack Tower (1x1)"))
         {
             PlaceBuilding(1, gridPos);
@@ -47,75 +37,115 @@ public class DebugWindow : EditorWindow
             PlaceBuilding(3, gridPos);
         }
 
+        GUILayout.Space(10);
+
+        // ========== Ghost 생성 ==========
+        GUILayout.Label("=== Spawn Building Ghost ===", EditorStyles.boldLabel);
+
+        if (GUILayout.Button("Spawn Attack Tower Ghost"))
+        {
+            SpawnGhost(1);
+        }
+
+        if (GUILayout.Button("Spawn Gold Mine Ghost"))
+        {
+            SpawnGhost(2);
+        }
+
+        if (GUILayout.Button("Spawn Wall Ghost"))
+        {
+            SpawnGhost(3);
+        }
+
+        GUILayout.Space(10);
+
+        // ========== 건물 삭제 ==========
+        GUILayout.Label("=== Delete Building ===", EditorStyles.boldLabel);
+
         if (GUILayout.Button("Delete Last Building"))
         {
             DeleteLastBuilding();
         }
-
-
-        GUILayout.Space(10);
-        GUILayout.Label("DebugFloatValue", EditorStyles.boldLabel);
-        debugFloatValue = EditorGUILayout.FloatField("입력값 : ", debugFloatValue);
     }
 
     void PlaceBuilding(int buildingID, Vector2Int gridPos)
     {
         if (!Application.isPlaying)
         {
-            EditorUtility.DisplayDialog("Error", "Play 모드에서만 실행 가능합니다!", "OK");
+            Debug.LogWarning("Play 모드에서만 사용 가능합니다!");
             return;
         }
 
-        if (BuildingManager.Instance == null)
-        {
-            Debug.LogError("BuildingManager.Instance is null!");
-            return;
-        }
-
-        if (GridArea.Instance == null)
-        {
-            Debug.LogError("GridArea.Instance is null!");
-            return;
-        }
-
-        // Grid 좌표 → World 좌표 변환
         BuildingData data = BuildingDataManager.Instance.GetData(buildingID);
+        if (data == null)
+        {
+            Debug.LogError($"BuildingData not found: {buildingID}");
+            return;
+        }
+
         Vector3 worldPos = GridArea.Instance.GridToWorldWithSize(gridPos.x, gridPos.y, data.sizeX, data.sizeY);
+        BuildingManager.Instance.PlaceBuildingServerRpc(buildingID, worldPos, gridPos, 0);
+    }
 
-        // 테스트용 플레이어 ID (0번 = 서버)
-        ulong playerID = 0;
+    void SpawnGhost(int buildingID)
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("Play 모드에서만 사용 가능합니다!");
+            return;
+        }
 
-        // 건물 설치 RPC 호출
-        BuildingManager.Instance.PlaceBuildingServerRpc(buildingID, worldPos, gridPos, playerID);
+        // Ghost Prefab 이름 가져오기
+        string ghostPrefabName = GetGhostPrefabName(buildingID);
 
-        Debug.Log($"Building {buildingID} placed at Grid({gridPos.x}, {gridPos.y}) World({worldPos})");
+        // AssetManager에서 로드 (Addressables)
+        GameObject ghostPrefab = AssetManager.Instance.GetByName(ghostPrefabName);
+        if (ghostPrefab == null)
+        {
+            Debug.LogError($"Ghost prefab not found: {ghostPrefabName}");
+            return;
+        }
+
+        // Ghost 생성
+        GameObject ghost = Object.Instantiate(ghostPrefab);
+        var ghostScript = ghost.GetComponent<BuildingGhost>();
+        if (ghostScript != null)
+        {
+            ghostScript.buildingID = buildingID;
+            Debug.Log($"✅ Ghost spawned: {ghostPrefabName}");
+        }
+    }
+
+    string GetGhostPrefabName(int buildingID)
+    {
+        return buildingID switch
+        {
+            1 => "AttackTowerGhost",
+            2 => "GoldMineGhost",
+            3 => "WallGhost",
+            _ => "AttackTowerGhost"
+        };
     }
 
     void DeleteLastBuilding()
     {
         if (!Application.isPlaying)
         {
-            EditorUtility.DisplayDialog("Error", "Play 모드에서만 실행 가능합니다!", "OK");
+            Debug.LogWarning("Play 모드에서만 사용 가능합니다!");
             return;
         }
 
-        // 서버에서 가장 최근 건물 찾아서 삭제
-        if (BuildingManager.Instance == null) return;
-
-        var buildings = BuildingManager.Instance.GetPlayerBuildings(0);
-        if (buildings.Count > 0)
+        var playerBuildings = BuildingManager.Instance.GetPlayerBuildings(0);
+        if (playerBuildings == null || playerBuildings.Count == 0)
         {
-            var lastBuilding = buildings[buildings.Count - 1];
-            var netObjRef = new Unity.Netcode.NetworkObjectReference(lastBuilding.GetComponent<Unity.Netcode.NetworkObject>());
-            BuildingManager.Instance.RemoveBuildingServerRpc(netObjRef, 0);
-
-            Debug.Log("Building deleted!");
-        }
-        else
-        {
-            Debug.Log("No buildings to delete!");
+            Debug.LogWarning("No buildings to delete!");
+            return;
         }
 
+        var lastBuilding = playerBuildings[playerBuildings.Count - 1];
+        var netObj = lastBuilding.GetComponent<Unity.Netcode.NetworkObject>();
 
+        BuildingManager.Instance.RemoveBuildingServerRpc(netObj, 0);
+        Debug.Log("Building deleted!");
     }
 }
