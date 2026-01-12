@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 4386830932934050042}
   - component: {fileID: 1544397652348822076}
   - component: {fileID: 1569610993719955960}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: AttackTower
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -161,8 +161,8 @@ MonoBehaviour:
     m_InternalValue: 1
   attackRange:
     m_InternalValue: 5
-  resourceProductionRate:
-    m_InternalValue: 0
+  bulletCountPerAttack:
+    m_InternalValue: 1
 --- !u!114 &1569610993719955960
 MonoBehaviour:
   m_ObjectHideFlags: 0

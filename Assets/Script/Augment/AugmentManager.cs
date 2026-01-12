@@ -3,6 +3,14 @@ using Unity.Netcode;
 using UnityEngine;
 using System.Linq;
 
+public enum AugmentTargetType
+{
+    All,           // 모든 건물
+    AttackTower,   // 공격 타워만
+    WallTower,     // 방어 타워만
+    ResourceTower  // 자원 타워만
+}
+
 public class AugmentManager : NetworkBehaviour
 {
     public static AugmentManager Instance;

@@ -19,6 +19,7 @@ public class LayerHelper
     public const string BuildingLayer = "Building";
     public const string EntityLayer = "Entity";
     public const string ObstacleLayer = "Obstacle";
+    public const string PlayerLayer = "Player";
 
     public int GetLayerToInt(string _str)
     {

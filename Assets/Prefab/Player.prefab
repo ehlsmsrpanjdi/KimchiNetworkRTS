@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 5056944471970735044}
   - component: {fileID: 2000440254935191561}
   - component: {fileID: -5313258583885437150}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -189,7 +189,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  Resources:
+  Wood:
+    m_InternalValue: 100
+  Iron:
     m_InternalValue: 100
 --- !u!195 &2000440254935191561
 NavMeshAgent:

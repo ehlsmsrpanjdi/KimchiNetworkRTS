@@ -6,7 +6,7 @@ using System;
 public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 {
     [Header("Building Identity")]
-    public int buildingID; // 건물 고유 ID
+    public int buildingID;
 
     [Header("Grid Reference")]
     public Vector2Int gridPosition;
@@ -17,6 +17,7 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
     protected BuildingData data;
     protected ModifierManager modifierManager;
     protected NavMeshObstacle navMeshObstacle;
+    protected SphereCollider proximityCollider;  // ✅ 추가
 
     [Header("Owner")]
     public NetworkVariable<ulong> ownerPlayerID = new NetworkVariable<ulong>(
@@ -27,7 +28,7 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 
     // ========== 이벤트 ==========
     public event Action OnAttack;
-    public event Action<MonsterBase> OnHit;  // ✅ 타겟 정보 추가
+    public event Action<MonsterBase> OnHit;
     public event Action OnDamaged;
 
     // ========== Unity Lifecycle ==========
@@ -50,7 +51,7 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
         modifierManager?.Update();
     }
 
-    // ========== 초기화 (서버에서만 호출) ==========
+    // ========== 초기화 ==========
     public void Initialize(int id, ulong ownerID, Vector2Int gridPos)
     {
         buildingID = id;
@@ -67,22 +68,96 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
         stat.InitializeFromData(data);
         SetupGrid();
         SetupNavMeshObstacle();
+        SetupProximityCollider();  // ✅ 추가
 
-        OnInitialized();  // ✅ 이 줄 추가
+        OnInitialized();
     }
 
-    // ✅ 하위 클래스에서 오버라이드 가능
     protected virtual void OnInitialized()
     {
         // 하위 클래스에서 구현
     }
+
+    // ========== Proximity Collider 설정 ==========
+    void SetupProximityCollider()
+    {
+        // 기존 SphereCollider 찾기
+        proximityCollider = GetComponent<SphereCollider>();
+
+        if (proximityCollider == null)
+        {
+            proximityCollider = gameObject.AddComponent<SphereCollider>();
+        }
+
+        proximityCollider.isTrigger = true;
+        proximityCollider.radius = stat.attackRange.Value;
+        proximityCollider.center = Vector3.zero;
+
+        LogHelper.Log($"✅ Proximity collider setup: radius = {proximityCollider.radius}");
+    }
+
+    void RemoveProximityCollider()
+    {
+        if (proximityCollider != null)
+        {
+            Destroy(proximityCollider);
+            proximityCollider = null;
+        }
+    }
+
+    // ========== Trigger 이벤트 ==========
+    void OnTriggerEnter(Collider other)
+    {
+        if (!IsServer) return;
+
+        if (LayerHelper.Instance.GetObjectLayer(other.gameObject) == LayerHelper.PlayerLayer)
+        {
+            var player = other.GetComponent<Player>();
+            if (player != null && player.OwnerClientId == ownerPlayerID.Value)
+            {
+                OnPlayerEnterRange(player);
+            }
+        }
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        if (!IsServer) return;
+
+        if (LayerHelper.Instance.GetObjectLayer(other.gameObject) == LayerHelper.PlayerLayer)
+        {
+            var player = other.GetComponent<Player>();
+            if (player != null && player.OwnerClientId == ownerPlayerID.Value)
+            {
+                OnPlayerStayRange(player);
+            }
+        }
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (!IsServer) return;
+
+        if (LayerHelper.Instance.GetObjectLayer(other.gameObject) == LayerHelper.PlayerLayer)
+        {
+            var player = other.GetComponent<Player>();
+            if (player != null && player.OwnerClientId == ownerPlayerID.Value)
+            {
+                OnPlayerExitRange(player);
+            }
+        }
+    }
+
+    // ✅ 하위 클래스에서 오버라이드
+    protected virtual void OnPlayerEnterRange(Player player) { }
+    protected virtual void OnPlayerStayRange(Player player) { }
+    protected virtual void OnPlayerExitRange(Player player) { }
 
     // ========== Grid 설정 ==========
     void SetupGrid()
     {
         if (grid == null || data == null) return;
 
-        // ✅ BuildingData의 크기 사용
         bool placed = grid.PlaceBuilding(gameObject, gridPosition.x, gridPosition.y, data.sizeX, data.sizeY);
 
         if (!placed)
@@ -103,7 +178,6 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
         navMeshObstacle.shape = NavMeshObstacleShape.Box;
         navMeshObstacle.center = Vector3.zero;
 
-        // ✅ BuildingData의 크기에 맞춰 NavMesh 크기 설정
         if (data != null && grid != null)
         {
             navMeshObstacle.size = new Vector3(
@@ -135,18 +209,10 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 
     public void ApplyEventModifier(IEventModifier modifier)
     {
-        // ✅ 이 부분도 수정됨
-        if (modifier is DoubleBulletModifier)
-        {
-            stat.bulletCountPerAttack.Value++;  // ← stat. 추가
-            LogHelper.Log($"✅ BulletCount increased: {stat.bulletCountPerAttack.Value}");
-            return;
-        }
-
         modifierManager.AddEventModifier(modifier);
     }
 
-    // ========== 이벤트 발동 (✅ public으로 변경) ==========
+    // ========== 이벤트 발동 ==========
     public void TriggerOnAttack() => OnAttack?.Invoke();
     public void TriggerOnHit(MonsterBase target) => OnHit?.Invoke(target);
     public void TriggerOnDamaged() => OnDamaged?.Invoke();
@@ -156,9 +222,7 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
     {
         if (!IsServer) return;
 
-        // ✅ 방어력 적용 (고정 감소)
         float finalDamage = Mathf.Max(0, damage - stat.defense.Value);
-
         stat.currentHP.Value -= finalDamage;
 
         if (stat.currentHP.Value <= 0f)
@@ -172,7 +236,7 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 
     protected virtual void OnDeath()
     {
-        // 건물 파괴 (하위 클래스에서 구현)
+        // 하위 클래스에서 구현
     }
 
     void OnHealthChanged(float previousValue, float newValue)
@@ -184,7 +248,7 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
     {
         if (data != null)
             return data.category;
-        return BuildingCategory.Support; // 기본값
+        return BuildingCategory.Support;
     }
 
     // ========== IPoolObj 구현 ==========
@@ -192,13 +256,13 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
     {
         LogHelper.Log($"BuildingBase.OnPush: {gameObject.name}");
 
-        // Grid에서 제거 (✅ data 크기 사용)
         if (grid != null && data != null)
         {
             grid.RemoveBuilding(gridPosition.x, gridPosition.y, data.sizeX, data.sizeY);
         }
 
         RemoveNavMeshObstacle();
+        RemoveProximityCollider();  // ✅ 추가
         modifierManager.Clear();
 
         OnAttack = null;

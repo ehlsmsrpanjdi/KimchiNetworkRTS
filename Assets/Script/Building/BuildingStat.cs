@@ -43,15 +43,7 @@ public class BuildingStat : NetworkBehaviour
     );
 
     public NetworkVariable<int> bulletCountPerAttack = new NetworkVariable<int>(
-    1,
-    NetworkVariableReadPermission.Everyone,
-    NetworkVariableWritePermission.Server
-);
-
-
-    // ========== 자원 생산 ==========
-    public NetworkVariable<float> resourceProductionRate = new NetworkVariable<float>(
-        0,
+        1,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server
     );
@@ -72,9 +64,19 @@ public class BuildingStat : NetworkBehaviour
             attackRange.Value = data.baseAttackRange;
         }
 
+        // ✅ 자원 타워도 attackDamage, attackSpeed 사용
         if (data.category == BuildingCategory.Resource)
         {
-            resourceProductionRate.Value = data.baseResourceRate;
+            attackDamage.Value = data.baseAttackDamage;  // 최대 스택
+            attackSpeed.Value = data.baseAttackSpeed;     // 초당 획득량
+            attackRange.Value = data.baseAttackRange;     // 수확 범위
+        }
+
+        // ✅ 벽 타워
+        if (data.category == BuildingCategory.Wall)
+        {
+            attackSpeed.Value = data.baseAttackSpeed;  // 초당 수리량
+            attackRange.Value = data.baseAttackRange;  // 수리 범위
         }
     }
 
@@ -92,10 +94,5 @@ public class BuildingStat : NetworkBehaviour
     public float GetFinalAttackRange(ModifierManager modifierManager)
     {
         return modifierManager.GetModifiedStat(attackRange.Value);
-    }
-
-    public float GetFinalResourceRate(ModifierManager modifierManager)
-    {
-        return modifierManager.GetModifiedStat(resourceProductionRate.Value);
     }
 }

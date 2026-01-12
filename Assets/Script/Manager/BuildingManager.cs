@@ -111,22 +111,19 @@ public class BuildingManager : NetworkBehaviour
         // 초기화
         buildingBase.Initialize(buildingID, playerID, gridPos);
 
-        // Spawn
-        netObj.Spawn();
-
-        // ✅ 건물 증강 적용
-        AugmentManager.Instance.ApplyAugmentsToNewBuilding(buildingBase, playerID);
-
-        LogHelper.Log($"✅ Building placed: {data.displayName}");
-
-
-        // ✅ Player에 건물 등록
+        // ✅ Player 등록 먼저
         Player ownerPlayer = PlayerManager.Instance.GetPlayer(playerID);
         if (ownerPlayer != null)
         {
             ownerPlayer.RegisterBuilding(buildingBase);
             LogHelper.Log($"✅ Building registered to Player {playerID}");
         }
+
+        // Spawn
+        netObj.Spawn();
+
+        // ✅ 증강 적용
+        AugmentManager.Instance.ApplyAugmentsToNewBuilding(buildingBase, playerID);
 
         // ✅ 전체 리스트에 추가
         allBuildings.Add(buildingBase);
@@ -207,8 +204,9 @@ public class BuildingManager : NetworkBehaviour
         return buildingID switch
         {
             1 => "AttackTower",
-            2 => "GoldMine",
+            2 => "IronMine",
             3 => "Wall",
+            4 => "WoodFarm",
             _ => "AttackTower"
         };
     }

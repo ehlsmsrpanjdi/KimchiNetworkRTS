@@ -5,6 +5,7 @@ using UnityEngine;
 
 /// <summary>
 /// 공격 건물 (총알 발사)
+/// 플레이어 근처: 공격력/공격속도 1.5배
 /// </summary>
 public class AttackTower : BuildingBase
 {
@@ -13,7 +14,11 @@ public class AttackTower : BuildingBase
     private MonsterBase currentTarget;
     private bool isInitialized = false;
 
-    // ✅ 외부 접근용 Property
+    [Header("Player Boost")]
+    private bool isBoosted = false;
+    private float baseDamage;
+    private float baseSpeed;
+
     public MonsterBase CurrentTarget => currentTarget;
 
     protected override void Update()
@@ -21,11 +26,41 @@ public class AttackTower : BuildingBase
         base.Update();
 
         if (!IsServer) return;
-
         if (!isInitialized) return;
 
         UpdateTarget();
         TryAttack();
+    }
+
+    // ========== 플레이어 근접 효과 ==========
+    protected override void OnPlayerEnterRange(Player player)
+    {
+        if (!isBoosted)
+        {
+            // 원본 값 저장
+            baseDamage = stat.attackDamage.Value;
+            baseSpeed = stat.attackSpeed.Value;
+
+            // 1.5배 버프
+            stat.attackDamage.Value *= 1.5f;
+            stat.attackSpeed.Value *= 1.5f;
+
+            isBoosted = true;
+            LogHelper.Log($"⚡ Attack boost activated! Damage: {stat.attackDamage.Value}, Speed: {stat.attackSpeed.Value}");
+        }
+    }
+
+    protected override void OnPlayerExitRange(Player player)
+    {
+        if (isBoosted)
+        {
+            // 원본 값 복구
+            stat.attackDamage.Value = baseDamage;
+            stat.attackSpeed.Value = baseSpeed;
+
+            isBoosted = false;
+            LogHelper.Log($"⚡ Attack boost deactivated! Damage: {stat.attackDamage.Value}, Speed: {stat.attackSpeed.Value}");
+        }
     }
 
     // ========== 타겟 찾기 ==========
@@ -114,14 +149,13 @@ public class AttackTower : BuildingBase
         {
             FireBullet(currentTarget);
 
-            if (i < stat.bulletCountPerAttack.Value - 1)  // 마지막 총알 후엔 대기 안 함
+            if (i < stat.bulletCountPerAttack.Value - 1)
             {
-                yield return new WaitForSeconds(0.1f);  // 0.1초 간격
+                yield return new WaitForSeconds(0.1f);
             }
         }
     }
 
-    // ========== 총알 발사 (✅ public으로 변경) ==========
     public void FireBullet(MonsterBase target)
     {
         string bulletPrefabName = GetBulletPrefabName(data.bulletPrefabID);
@@ -172,7 +206,7 @@ public class AttackTower : BuildingBase
         };
     }
 
-    // ========== 초기화 오버라이드 ==========
+    // ========== 초기화 ==========
     protected override void OnInitialized()
     {
         base.OnInitialized();
@@ -193,6 +227,7 @@ public class AttackTower : BuildingBase
     {
         base.OnPop();
         isInitialized = false;
+        isBoosted = false;
     }
 
     public override void OnPush()
@@ -201,6 +236,7 @@ public class AttackTower : BuildingBase
         isInitialized = false;
         currentTarget = null;
         lastAttackTime = 0f;
+        isBoosted = false;
     }
 
     // ========== 디버그 ==========

@@ -21,14 +21,12 @@ public class BuildingDataManager
 
     void Initialize()
     {
-        // ✅ TODO: 나중에 엑셀에서 로드
-        // 지금은 하드코딩으로 테스트 데이터
         LoadTestData();
     }
 
     void LoadTestData()
     {
-        // ID 1: 기본 포탑 (Wood 20, Iron 50)
+        // ID 1: 기본 포탑
         var attackTower = new BuildingData
         {
             buildingID = 1,
@@ -44,33 +42,35 @@ public class BuildingDataManager
             baseMaxHP = 500,
             isAttackTower = true,
             baseAttackDamage = 25,
-            baseAttackSpeed = 1f,      // 초당 1회 공격
-            baseAttackRange = 10f,     // 사거리 10
+            baseAttackSpeed = 1f,
+            baseAttackRange = 10f,
             attackPriority = AttackPriority.Nearest,
             bulletPrefabID = 1,
-            bulletSpeed = 15f,         // ✅ 추가
-            bulletMovementID = 1       // ✅ 추가: 직선 이동
+            bulletSpeed = 15f,
+            bulletMovementID = 1
         };
 
-        // ID 2: 금광 (Wood 50, Iron 100)
-        var goldMine = new BuildingData
+        // ID 2: 철 광산
+        var ironMine = new BuildingData
         {
             buildingID = 2,
-            displayName = "금광",
+            displayName = "철 광산",
             category = BuildingCategory.Resource,
             sizeX = 2,
             sizeY = 2,
             constructionCosts = new ResourceCost[]
             {
-                new ResourceCost { resourceType = ResourceType.Wood, amount = 50 },
-                new ResourceCost { resourceType = ResourceType.Iron, amount = 100 },
+                new ResourceCost { resourceType = ResourceType.Iron, amount = 50 }
             },
             baseMaxHP = 300,
+            baseAttackDamage = 100,    // 최대 스택
+            baseAttackSpeed = 5,       // 초당 5씩 획득
+            baseAttackRange = 3f,      // 수확 범위
             resourceType = ResourceType.Iron,
-            baseResourceRate = 10
+            harvestDuration = 2f
         };
 
-        // ID 3: 벽 (Iron 80)
+        // ID 3: 벽
         var wall = new BuildingData
         {
             buildingID = 3,
@@ -82,12 +82,36 @@ public class BuildingDataManager
             {
                 new ResourceCost { resourceType = ResourceType.Iron, amount = 80 }
             },
-            baseMaxHP = 1000
+            baseMaxHP = 1000,
+            baseDefense = 50,
+            baseAttackRange = 3f,   // 수리 범위
+            baseAttackSpeed = 10f   // 초당 수리량
+        };
+
+        // ID 4: 나무 농장
+        var woodFarm = new BuildingData
+        {
+            buildingID = 4,
+            displayName = "나무 농장",
+            category = BuildingCategory.Resource,
+            sizeX = 2,
+            sizeY = 2,
+            constructionCosts = new ResourceCost[]
+            {
+                new ResourceCost { resourceType = ResourceType.Wood, amount = 30 }
+            },
+            baseMaxHP = 300,
+            baseAttackDamage = 100,    // 최대 스택
+            baseAttackSpeed = 10,      // 초당 10씩 획득
+            baseAttackRange = 3f,      // 수확 범위
+            resourceType = ResourceType.Wood,
+            harvestDuration = 2f
         };
 
         dataDict[1] = attackTower;
-        dataDict[2] = goldMine;
+        dataDict[2] = ironMine;
         dataDict[3] = wall;
+        dataDict[4] = woodFarm;
     }
 
     public BuildingData GetData(int buildingID)

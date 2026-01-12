@@ -16,7 +16,7 @@ MonoBehaviour:
   m_GUID: 6658618bb1d25b64cbfa6b3deb0b1343
   m_SerializeEntries:
   - m_GUID: 9148db582910245408095a2ebf103e86
-    m_Address: GoldMine
+    m_Address: IronMine
     m_ReadOnly: 0
     m_SerializedLabels:
     - Building

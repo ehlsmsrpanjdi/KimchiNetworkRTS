@@ -1,35 +1,32 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class EffectManager : MonoBehaviour
+public class EffectManager
 {
-    public static EffectManager Instance;
-
-    // effectName → Queue<EffectBase>
-    private Dictionary<string, Queue<EffectBase>> pools = new Dictionary<string, Queue<EffectBase>>();
-
-    // effectName → Prefab
-    private Dictionary<string, GameObject> prefabs = new Dictionary<string, GameObject>();
-
-    void Awake()
+    private static EffectManager instance;
+    public static EffectManager Instance
     {
-        if (Instance != null)
+        get
         {
-            Destroy(gameObject);
-            return;
+            if (instance == null)
+            {
+                instance = new EffectManager();
+                instance.Initialize();
+            }
+            return instance;
         }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
-    void Start()
+    private Dictionary<string, Queue<EffectBase>> pools = new Dictionary<string, Queue<EffectBase>>();
+    private Dictionary<string, GameObject> prefabs = new Dictionary<string, GameObject>();
+
+    void Initialize()
     {
         LoadEffects();
     }
 
     void LoadEffects()
     {
-        // Addressables에서 "Effect" 라벨로 로드
         var effectPrefabs = AssetManager.Instance.GetPrefabsByLabel("Effect");
 
         foreach (var prefab in effectPrefabs)
@@ -44,9 +41,6 @@ public class EffectManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 이펙트 재생
-    /// </summary>
     public void Play(string effectName, Vector3 position, Quaternion rotation = default)
     {
         if (rotation == default)
@@ -59,9 +53,6 @@ public class EffectManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 풀에서 꺼내기
-    /// </summary>
     EffectBase GetFromPool(string effectName)
     {
         if (!prefabs.ContainsKey(effectName))
@@ -85,7 +76,7 @@ public class EffectManager : MonoBehaviour
         else
         {
             GameObject prefab = prefabs[effectName];
-            GameObject go = Instantiate(prefab, transform);
+            GameObject go = Object.Instantiate(prefab);  // ✅ transform 부모 없이
             effect = go.GetComponent<EffectBase>();
             effect.OnPop();
         }
@@ -93,9 +84,6 @@ public class EffectManager : MonoBehaviour
         return effect;
     }
 
-    /// <summary>
-    /// 풀에 반환
-    /// </summary>
     public void ReturnEffect(string effectName, EffectBase effect)
     {
         if (!pools.ContainsKey(effectName))

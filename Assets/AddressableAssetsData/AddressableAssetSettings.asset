@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: c81dea3a2d70bb547a430c567d9cb8ec
   m_currentHash:
     serializedVersion: 2
-    Hash: 00000000000000000000000000000000
+    Hash: d257837c0a02b2b3d0e98937615d17ee
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_CatalogRequestsTimeout: 0
@@ -108,6 +108,7 @@ MonoBehaviour:
     - BuildingGhost
     - Monster
     - Bullet
+    - Effect
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 6aeea25aa9c10cb459a938e9423e6234, type: 2}

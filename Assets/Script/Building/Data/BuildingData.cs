@@ -68,21 +68,22 @@ public class BuildingData
     public float baseMaxHP;
     public float baseDefense;
 
-    // ===== 공격 관련 =====
+    // ===== 공통 스탯 (용도가 건물 타입마다 다름) =====
     public bool isAttackTower;
-    public float baseAttackDamage;
+    public float baseAttackDamage;  // 공격: 데미지 / 자원: 최대 스택
     public AttackType attackType;
-    public float baseAttackRange;
-    public float baseAttackSpeed;
+    public float baseAttackRange;   // 공격: 사거리 / 벽: 수리 범위 / 자원: 수확 범위
+    public float baseAttackSpeed;   // 공격: 속도 / 자원: 초당 획득 / 벽: 초당 수리
+
     public AttackPriority attackPriority;
     public float aoeDamageRadius;
 
     // ===== 탄환 관련 =====
     public int bulletPrefabID;
-    public float bulletSpeed;         // ✅ 추가
-    public int bulletMovementID;      // ✅ 추가 (1=직선, 2=포물선, 3=호밍)
+    public float bulletSpeed;
+    public int bulletMovementID;
 
-    // ===== 자원 생산 =====
-    public ResourceType resourceType;
-    public float baseResourceRate;
+    // ===== 자원 타워 전용 =====
+    public ResourceType resourceType;  // 생산할 자원 종류
+    public float harvestDuration;      // 수확 소요 시간
 }
