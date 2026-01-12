@@ -22,7 +22,7 @@ public class LoadManager
         await AssetManager.Instance.LoadByLabelAsync("Building"); // ✅ 추가
         await AssetManager.Instance.LoadByLabelAsync("BuildingGhost"); // ✅ 추가
         await AssetManager.Instance.LoadByLabelAsync("Monster"); // ✅ 추가
-        //await AssetManager.Instance.LoadByLabelAsync("Bullet");
+        await AssetManager.Instance.LoadByLabelAsync("Bullet");
         //await AssetManager.Instance.LoadByLabelAsync("UI");
     }
 }

@@ -53,13 +53,10 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
     // ========== 초기화 (서버에서만 호출) ==========
     public void Initialize(int id, ulong ownerID, Vector2Int gridPos)
     {
-        if (!IsServer) return;
-
         buildingID = id;
         ownerPlayerID.Value = ownerID;
         gridPosition = gridPos;
 
-        // BuildingData 로드
         data = BuildingDataManager.Instance.GetData(id);
         if (data == null)
         {
@@ -67,14 +64,17 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
             return;
         }
 
-        // Stat 초기화
         stat.InitializeFromData(data);
-
-        // Grid 배치 (✅ data에서 크기 가져옴)
         SetupGrid();
-
-        // NavMesh 설정
         SetupNavMeshObstacle();
+
+        OnInitialized();  // ✅ 이 줄 추가
+    }
+
+    // ✅ 하위 클래스에서 오버라이드 가능
+    protected virtual void OnInitialized()
+    {
+        // 하위 클래스에서 구현
     }
 
     // ========== Grid 설정 ==========
@@ -138,10 +138,10 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
         modifierManager.AddEventModifier(modifier);
     }
 
-    // ========== 이벤트 발동 ==========
-    protected void TriggerOnAttack() => OnAttack?.Invoke();
-    protected void TriggerOnHit() => OnHit?.Invoke();
-    protected void TriggerOnDamaged() => OnDamaged?.Invoke();
+    // ========== 이벤트 발동 (✅ public으로 변경) ==========
+    public void TriggerOnAttack() => OnAttack?.Invoke();
+    public void TriggerOnHit() => OnHit?.Invoke();
+    public void TriggerOnDamaged() => OnDamaged?.Invoke();
 
     // ========== ITakeDamage 구현 ==========
     public virtual void TakeDamage(float damage)

@@ -28,7 +28,7 @@ public class BuildingDataManager
 
     void LoadTestData()
     {
-        // ID 1: 기본 포탑 (골드 50, 나무 20)
+        // ID 1: 기본 포탑 (Wood 20, Iron 50)
         var attackTower = new BuildingData
         {
             buildingID = 1,
@@ -38,15 +38,21 @@ public class BuildingDataManager
             sizeY = 1,
             constructionCosts = new ResourceCost[]
             {
-            new ResourceCost { resourceType = ResourceType.Wood, amount = 20 },
-            new ResourceCost { resourceType = ResourceType.Iron, amount = 50 },
+                new ResourceCost { resourceType = ResourceType.Wood, amount = 20 },
+                new ResourceCost { resourceType = ResourceType.Iron, amount = 50 },
             },
             baseMaxHP = 500,
             isAttackTower = true,
-            baseAttackDamage = 25
+            baseAttackDamage = 25,
+            baseAttackSpeed = 1f,      // 초당 1회 공격
+            baseAttackRange = 10f,     // 사거리 10
+            attackPriority = AttackPriority.Nearest,
+            bulletPrefabID = 1,
+            bulletSpeed = 15f,         // ✅ 추가
+            bulletMovementID = 1       // ✅ 추가: 직선 이동
         };
 
-        // ID 2: 금광 (골드 100, 나무 50, 돌 30)
+        // ID 2: 금광 (Wood 50, Iron 100)
         var goldMine = new BuildingData
         {
             buildingID = 2,
@@ -56,15 +62,15 @@ public class BuildingDataManager
             sizeY = 2,
             constructionCosts = new ResourceCost[]
             {
-            new ResourceCost { resourceType = ResourceType.Wood, amount = 50 },
-            new ResourceCost { resourceType = ResourceType.Iron, amount = 100 },
+                new ResourceCost { resourceType = ResourceType.Wood, amount = 50 },
+                new ResourceCost { resourceType = ResourceType.Iron, amount = 100 },
             },
             baseMaxHP = 300,
             resourceType = ResourceType.Iron,
             baseResourceRate = 10
         };
 
-        // ID 3: 벽 (돌 80)
+        // ID 3: 벽 (Iron 80)
         var wall = new BuildingData
         {
             buildingID = 3,
@@ -74,7 +80,7 @@ public class BuildingDataManager
             sizeY = 3,
             constructionCosts = new ResourceCost[]
             {
-            new ResourceCost { resourceType = ResourceType.Iron, amount = 80 }
+                new ResourceCost { resourceType = ResourceType.Iron, amount = 80 }
             },
             baseMaxHP = 1000
         };

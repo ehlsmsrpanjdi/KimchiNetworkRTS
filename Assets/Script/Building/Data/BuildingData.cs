@@ -76,7 +76,11 @@ public class BuildingData
     public float baseAttackSpeed;
     public AttackPriority attackPriority;
     public float aoeDamageRadius;
+
+    // ===== 탄환 관련 =====
     public int bulletPrefabID;
+    public float bulletSpeed;         // ✅ 추가
+    public int bulletMovementID;      // ✅ 추가 (1=직선, 2=포물선, 3=호밍)
 
     // ===== 자원 생산 =====
     public ResourceType resourceType;

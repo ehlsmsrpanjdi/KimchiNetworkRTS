@@ -73,8 +73,7 @@ public class MonsterManager : NetworkBehaviour
     /// </summary>
     public bool AreAllMonstersDead()
     {
-        // ✅ MonsterManager 사용 (빠름!)
-        return MonsterManager.Instance.AreAllMonstersDead();
+        return aliveMonsters.Count == 0; // ✅ 직접 체크
     }
 
     /// <summary>

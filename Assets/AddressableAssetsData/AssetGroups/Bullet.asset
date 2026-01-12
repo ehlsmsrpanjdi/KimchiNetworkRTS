@@ -14,7 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_GroupName: Bullet
   m_GUID: 0842f80f91aabbb4ba405b39f406a833
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: e69bef2fa50172e4ebc84136eb342f23
+    m_Address: Assets/Prefab/Bullet/BasicBullet.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Bullet
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: be3575549186579488388af5377ffc07, type: 2}
   m_SchemaSet:
