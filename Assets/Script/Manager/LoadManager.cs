@@ -21,6 +21,7 @@ public class LoadManager
         //await AssetManager.Instance.LoadByLabelAsync("Entity");
         await AssetManager.Instance.LoadByLabelAsync("Building"); // ✅ 추가
         await AssetManager.Instance.LoadByLabelAsync("BuildingGhost"); // ✅ 추가
+        await AssetManager.Instance.LoadByLabelAsync("Monster"); // ✅ 추가
         //await AssetManager.Instance.LoadByLabelAsync("Bullet");
         //await AssetManager.Instance.LoadByLabelAsync("UI");
     }
@@ -30,7 +31,7 @@ public class LoadManager
 public static class ResourceString
 {
     public const string LabelUI = "UI";
-    public const string LabelEntity = "Entity";
+    public const string LabelMonster = "Monster";
     public const string LabelBuilding = "Building";
     public const string LabelBullet = "Bullet";
 

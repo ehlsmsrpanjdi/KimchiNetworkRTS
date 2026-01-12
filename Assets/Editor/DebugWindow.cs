@@ -66,6 +66,18 @@ public class DebugWindow : EditorWindow
         {
             DeleteLastBuilding();
         }
+
+        GUILayout.Label("=== Wave Manager ===", EditorStyles.boldLabel);
+
+        if (GUILayout.Button("Start Wave"))
+        {
+            StartWave();
+        }
+
+        if (GUILayout.Button("Force End Wave"))
+        {
+            ForceEndWave();
+        }
     }
 
     void PlaceBuilding(int buildingID, Vector2Int gridPos)
@@ -148,4 +160,27 @@ public class DebugWindow : EditorWindow
         BuildingManager.Instance.RemoveBuildingServerRpc(netObj, 0);
         Debug.Log("Building deleted!");
     }
+
+    void StartWave()
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("Play 모드에서만 사용 가능합니다!");
+            return;
+        }
+
+        WaveManager.Instance.StartWaveServerRpc();
+    }
+
+    void ForceEndWave()
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("Play 모드에서만 사용 가능합니다!");
+            return;
+        }
+
+        // TODO: WaveManager에 ForceEndWaveServerRpc 추가
+    }
+
 }

@@ -106,6 +106,7 @@ MonoBehaviour:
     - default
     - Building
     - BuildingGhost
+    - Monster
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 6aeea25aa9c10cb459a938e9423e6234, type: 2}

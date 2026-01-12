@@ -31,9 +31,9 @@ public class NetworkPoolManager : MonoBehaviour
 
     void RegisterAllHandlers()
     {
-        RegisterByLabel(ResourceString.LabelEntity);
         RegisterByLabel(ResourceString.LabelBullet);
         RegisterByLabel(ResourceString.LabelBuilding);
+        RegisterByLabel(ResourceString.LabelMonster); 
     }
 
     void RegisterByLabel(string label)

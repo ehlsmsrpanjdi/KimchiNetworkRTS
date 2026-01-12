@@ -7,7 +7,7 @@ public class MonsterBase : NetworkBehaviour, ITakeDamage, IPoolObj
 {
     [Header("Monster Identity")]
     public int monsterID;
-    private MonsterData data;
+    public MonsterData data;
 
     [Header("Components")]
     public NavMeshAgent agent;
@@ -33,16 +33,39 @@ public class MonsterBase : NetworkBehaviour, ITakeDamage, IPoolObj
     [Header("Spawned Time")]
     private float spawnedTime; // 스폰된 시간 (게임 시간 기준)
 
+    private int pendingMonsterID;
+    private float pendingGameTime;
+    private bool needsInitialization = false;
+
     private void Reset()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
     }
 
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+
+        // ✅ Spawn 후 초기화 실행
+        if (IsServer && needsInitialization)
+        {
+            InitializeInternal(pendingMonsterID, pendingGameTime);
+            needsInitialization = false;
+        }
+    }
+
     // ========== 초기화 ==========
     public void Initialize(int id, float gameTime)
     {
-        if (!IsServer) return;
+        pendingMonsterID = id;
+        pendingGameTime = gameTime;
+        needsInitialization = true;
+    }
+
+    void InitializeInternal(int id, float gameTime)
+    {
+        LogHelper.Log($"🟢 MonsterBase.InitializeInternal called! ID: {id}, IsServer: {IsServer}");
 
         monsterID = id;
         spawnedTime = gameTime;
@@ -53,6 +76,8 @@ public class MonsterBase : NetworkBehaviour, ITakeDamage, IPoolObj
             LogHelper.LogError($"MonsterData not found: {id}");
             return;
         }
+
+        LogHelper.Log($"🟢 MonsterData loaded: {data.displayName}");
 
         // 시간에 따른 스탯 스케일링 계산
         float scalingMultiplier = CalculateScalingMultiplier(gameTime);
@@ -71,6 +96,9 @@ public class MonsterBase : NetworkBehaviour, ITakeDamage, IPoolObj
         {
             agent.speed = moveSpeed.Value;
         }
+
+        // MonsterManager에 등록
+        MonsterManager.Instance.RegisterMonster(this);
 
         LogHelper.Log($"✅ Monster initialized: {data.displayName} (HP: {maxHP.Value}, DMG: {attackDamage.Value})");
     }
@@ -243,6 +271,9 @@ public class MonsterBase : NetworkBehaviour, ITakeDamage, IPoolObj
         if (!IsServer) return;
 
         LogHelper.Log($"💀 {data.displayName} died!");
+
+        // ✅ MonsterManager에서 해제
+        MonsterManager.Instance.UnregisterMonster(this);
 
         // TODO: 자원 드롭
         // TODO: 경험치 지급
