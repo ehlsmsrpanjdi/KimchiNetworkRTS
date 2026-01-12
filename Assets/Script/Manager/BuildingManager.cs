@@ -114,6 +114,12 @@ public class BuildingManager : NetworkBehaviour
         // Spawn
         netObj.Spawn();
 
+        // ✅ 건물 증강 적용
+        AugmentManager.Instance.ApplyAugmentsToNewBuilding(buildingBase, playerID);
+
+        LogHelper.Log($"✅ Building placed: {data.displayName}");
+
+
         // ✅ Player에 건물 등록
         Player ownerPlayer = PlayerManager.Instance.GetPlayer(playerID);
         if (ownerPlayer != null)

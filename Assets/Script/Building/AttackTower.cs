@@ -1,6 +1,7 @@
-﻿using Unity.Netcode;
-using UnityEngine;
+﻿using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
+using UnityEngine;
 
 /// <summary>
 /// 공격 건물 (총알 발사)
@@ -10,41 +11,31 @@ public class AttackTower : BuildingBase
     [Header("Attack")]
     private float lastAttackTime;
     private MonsterBase currentTarget;
-    private bool isInitialized = false;  // ✅ 이 줄 추가
+    private bool isInitialized = false;
+
+    // ✅ 외부 접근용 Property
+    public MonsterBase CurrentTarget => currentTarget;
 
     protected override void Update()
     {
         base.Update();
 
         if (!IsServer) return;
-        if (!isInitialized) return;  // ✅ 변경됨
+
+        if (!isInitialized) return;
 
         UpdateTarget();
         TryAttack();
     }
 
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-
-        if (data != null && data.isAttackTower)
-        {
-            isInitialized = true;
-            LogHelper.Log($"✅ AttackTower initialized: {data.displayName}");
-        }
-    }
-
-
     // ========== 타겟 찾기 ==========
     void UpdateTarget()
     {
-        // 현재 타겟이 유효한지 체크
         if (IsValidTarget(currentTarget))
         {
             return;
         }
 
-        // 새 타겟 찾기
         currentTarget = FindTarget();
     }
 
@@ -53,7 +44,6 @@ public class AttackTower : BuildingBase
         if (target == null || !target.gameObject.activeSelf)
             return false;
 
-        // 사거리 체크
         float distance = Vector3.Distance(transform.position, target.transform.position);
         return distance <= stat.attackRange.Value;
     }
@@ -72,11 +62,9 @@ public class AttackTower : BuildingBase
 
             float distance = Vector3.Distance(transform.position, monster.transform.position);
 
-            // 사거리 밖이면 스킵
             if (distance > stat.attackRange.Value)
                 continue;
 
-            // 우선순위에 따라 타겟 선택
             float value = GetTargetPriority(monster, distance);
 
             if (value < bestValue)
@@ -95,7 +83,7 @@ public class AttackTower : BuildingBase
         {
             AttackPriority.Nearest => distance,
             AttackPriority.LowestHP => monster.currentHP.Value,
-            AttackPriority.Strongest => -monster.maxHP.Value, // 음수로 해서 큰 값이 우선
+            AttackPriority.Strongest => -monster.maxHP.Value,
             _ => distance
         };
     }
@@ -106,29 +94,35 @@ public class AttackTower : BuildingBase
         if (currentTarget == null)
             return;
 
-        // 공격 쿨다운 체크
         float attackCooldown = 1f / stat.attackSpeed.Value;
         if (Time.time - lastAttackTime < attackCooldown)
             return;
 
-        // 공격 실행
         PerformAttack();
         lastAttackTime = Time.time;
     }
 
     void PerformAttack()
     {
-        // OnAttack 이벤트 발동 (Modifier용)
         TriggerOnAttack();
-
-        // 총알 발사
-        FireBullet(currentTarget);
-
-        LogHelper.Log($"🔫 {data.displayName} attacked {currentTarget.data?.displayName}");
+        StartCoroutine(FireBulletsWithDelay());
     }
 
-    // ========== 총알 발사 ==========
-    void FireBullet(MonsterBase target)
+    IEnumerator FireBulletsWithDelay()
+    {
+        for (int i = 0; i < stat.bulletCountPerAttack.Value; i++)
+        {
+            FireBullet(currentTarget);
+
+            if (i < stat.bulletCountPerAttack.Value - 1)  // 마지막 총알 후엔 대기 안 함
+            {
+                yield return new WaitForSeconds(0.1f);  // 0.1초 간격
+            }
+        }
+    }
+
+    // ========== 총알 발사 (✅ public으로 변경) ==========
+    public void FireBullet(MonsterBase target)
     {
         string bulletPrefabName = GetBulletPrefabName(data.bulletPrefabID);
         GameObject bulletPrefab = AssetManager.Instance.GetByName(bulletPrefabName);
@@ -141,7 +135,6 @@ public class AttackTower : BuildingBase
 
         Vector3 spawnPos = transform.position + Vector3.up * 1f;
 
-        // ✅ 풀에서 가져오기
         NetworkObject netObj = NetworkPoolManager.Instance.GetFromPool(
             bulletPrefab,
             spawnPos,
@@ -156,7 +149,6 @@ public class AttackTower : BuildingBase
             return;
         }
 
-        // 총알 초기화
         float finalDamage = stat.GetFinalAttackDamage(modifierManager);
         bullet.Initialize(
             this,
@@ -166,7 +158,6 @@ public class AttackTower : BuildingBase
             data.bulletSpeed
         );
 
-        // Spawn
         netObj.Spawn();
     }
 
@@ -181,16 +172,45 @@ public class AttackTower : BuildingBase
         };
     }
 
+    // ========== 초기화 오버라이드 ==========
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (data != null && data.isAttackTower)
+        {
+            isInitialized = true;
+            LogHelper.Log($"✅ AttackTower initialized: {data.displayName}");
+        }
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+    }
+
+    public override void OnPop()
+    {
+        base.OnPop();
+        isInitialized = false;
+    }
+
+    public override void OnPush()
+    {
+        base.OnPush();
+        isInitialized = false;
+        currentTarget = null;
+        lastAttackTime = 0f;
+    }
+
     // ========== 디버그 ==========
     void OnDrawGizmosSelected()
     {
         if (data == null) return;
 
-        // 공격 사거리 표시
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, stat.attackRange.Value);
 
-        // 타겟 라인
         if (currentTarget != null)
         {
             Gizmos.color = Color.yellow;

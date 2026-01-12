@@ -18,6 +18,14 @@ public class Player : NetworkBehaviour
     [Header("Building Ownership")]
     private Dictionary<BuildingCategory, List<BuildingBase>> ownedBuildings = new Dictionary<BuildingCategory, List<BuildingBase>>();
 
+    [Header("Augments")]
+    public NetworkList<int> ownedAugmentIDs;  // ✅ 추가
+
+    private void Awake()
+    {
+        ownedAugmentIDs = new NetworkList<int>();  // ✅ 초기화
+    }
+
     private void Reset()
     {
         controller = GetComponent<PlayerController>();

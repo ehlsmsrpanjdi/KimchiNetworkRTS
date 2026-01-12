@@ -60,24 +60,17 @@ public class BulletBase : NetworkBehaviour, IPoolObj
     // ========== 타겟 도착 ==========
     void OnReachTarget()
     {
-        // 타겟이 죽었으면 그냥 소멸
         if (targetMonster == null || !targetMonster.gameObject.activeSelf)
         {
-            LogHelper.Log("💨 타겟 사망, 총알 소멸");
             ReturnToPool();
             return;
         }
 
-        // 데미지 적용
         targetMonster.TakeDamage(damage);
-        LogHelper.Log($"💥 Bullet hit: {damage} damage to {targetMonster.data?.displayName}");
 
-        // ✅ Owner Building의 OnHit 이벤트 발동 (Modifier용)
-        ownerBuilding?.TriggerOnHit();
+        // ✅ 타겟 정보 전달
+        ownerBuilding?.TriggerOnHit(targetMonster);
 
-        // TODO: 히트 이펙트
-
-        // 풀 반환
         ReturnToPool();
     }
 

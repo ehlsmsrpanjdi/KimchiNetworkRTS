@@ -27,7 +27,7 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 
     // ========== 이벤트 ==========
     public event Action OnAttack;
-    public event Action OnHit;
+    public event Action<MonsterBase> OnHit;  // ✅ 타겟 정보 추가
     public event Action OnDamaged;
 
     // ========== Unity Lifecycle ==========
@@ -135,12 +135,20 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 
     public void ApplyEventModifier(IEventModifier modifier)
     {
+        // ✅ 이 부분도 수정됨
+        if (modifier is DoubleBulletModifier)
+        {
+            stat.bulletCountPerAttack.Value++;  // ← stat. 추가
+            LogHelper.Log($"✅ BulletCount increased: {stat.bulletCountPerAttack.Value}");
+            return;
+        }
+
         modifierManager.AddEventModifier(modifier);
     }
 
     // ========== 이벤트 발동 (✅ public으로 변경) ==========
     public void TriggerOnAttack() => OnAttack?.Invoke();
-    public void TriggerOnHit() => OnHit?.Invoke();
+    public void TriggerOnHit(MonsterBase target) => OnHit?.Invoke(target);
     public void TriggerOnDamaged() => OnDamaged?.Invoke();
 
     // ========== ITakeDamage 구현 ==========

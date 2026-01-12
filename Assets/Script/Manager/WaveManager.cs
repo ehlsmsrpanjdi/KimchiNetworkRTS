@@ -188,12 +188,16 @@ public class WaveManager : NetworkBehaviour
         isWaveActive.Value = false;
         LogHelper.Log($"✅ Wave {currentWaveData.waveNumber} completed!");
 
+        // ✅ 증강 선택 UI 표시
+        AugmentManager.Instance.ShowAugmentSelectionServerRpc();
+
         // 다음 웨이브 준비
         currentWaveID++;
 
         // 30초 후 자동 시작
         StartCoroutine(StartNextWaveAfterDelay(30f));
     }
+
 
     IEnumerator StartNextWaveAfterDelay(float delay)
     {

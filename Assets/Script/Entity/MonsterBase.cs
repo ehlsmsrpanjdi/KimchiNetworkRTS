@@ -100,7 +100,10 @@ public class MonsterBase : NetworkBehaviour, ITakeDamage, IPoolObj
         // MonsterManager에 등록
         MonsterManager.Instance.RegisterMonster(this);
 
-        LogHelper.Log($"✅ Monster initialized: {data.displayName} (HP: {maxHP.Value}, DMG: {attackDamage.Value})");
+        // ✅ 몬스터 증강 적용
+        AugmentManager.Instance.ApplyAugmentsToNewMonster(this);
+
+        LogHelper.Log($"✅ Monster initialized: {data.displayName}");
     }
 
     // ========== 시간 스케일링 계산 ==========

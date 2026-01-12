@@ -42,6 +42,13 @@ public class BuildingStat : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
+    public NetworkVariable<int> bulletCountPerAttack = new NetworkVariable<int>(
+    1,
+    NetworkVariableReadPermission.Everyone,
+    NetworkVariableWritePermission.Server
+);
+
+
     // ========== 자원 생산 ==========
     public NetworkVariable<float> resourceProductionRate = new NetworkVariable<float>(
         0,
