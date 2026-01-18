@@ -15,5 +15,22 @@ public class BuildingButtonsUI : UIBase
         buildingButtonUIPrefab = Resources.Load<GameObject>("BuildingButton");
     }
 
+    public void AddButton(int _ButtonData)
+    {
+        GameObject ButtonObj = Instantiate(buildingButtonUIPrefab, gridLayoutGroup.transform);
+        BuildingButtonUI Button = ButtonObj.GetComponent<BuildingButtonUI>();
+
+        buildingButtonUIs.Add(ButtonObj);
+
+    }
+
+    public void RemoveAllButton()
+    {
+        foreach (GameObject obj in buildingButtonUIs)
+        {
+            Destroy(obj);
+        }
+        buildingButtonUIs.Clear();
+    }
 
 }

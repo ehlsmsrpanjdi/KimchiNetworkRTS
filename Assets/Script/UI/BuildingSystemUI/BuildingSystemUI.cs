@@ -5,8 +5,8 @@ public class BuildingSystemUI : UIBase
 {
     [Header("Refs")]
     [SerializeField] RectTransform panel; // 본체
-    [SerializeField] RectTransform button; // 슬라이드 버튼 (BuildingSystemButtonUI)
-    [SerializeField] RectTransform resourceUI; // 리소스 UI
+    RectTransform button; // 슬라이드 버튼 (BuildingSystemButtonUI)
+    RectTransform resourceUI; // 리소스 UI
 
     [Header("Tween")]
     [SerializeField] float duration = 0.3f;
