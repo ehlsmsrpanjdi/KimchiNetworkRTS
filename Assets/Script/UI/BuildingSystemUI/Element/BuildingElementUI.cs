@@ -29,19 +29,19 @@ public class BuildingElementUI : UIBase
 
     void OnClickBattle()
     {
-        //buildingButtonsUI
-
+        buildingButtonsUI.RemoveAllButton();
+        buildingButtonsUI.ShowBuildingsByCategory(BuildingCategory.Attack);
     }
 
     void OnClickResource()
     {
-        //buildingButtonsUI
-
+        buildingButtonsUI.RemoveAllButton();
+        buildingButtonsUI.ShowBuildingsByCategory(BuildingCategory.Resource);
     }
 
     void OnClickWall()
     {
-        //buildingButtonsUI
-
+        buildingButtonsUI.RemoveAllButton();
+        buildingButtonsUI.ShowBuildingsByCategory(BuildingCategory.Wall);
     }
 }

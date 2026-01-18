@@ -8,20 +8,36 @@ public class BuildingButtonsUI : UIBase
     [SerializeField] GameObject buildingButtonUIPrefab;
     [SerializeField] List<GameObject> buildingButtonUIs = new List<GameObject>();
 
-
     private void Reset()
     {
         gridLayoutGroup = GetComponent<GridLayoutGroup>();
         buildingButtonUIPrefab = Resources.Load<GameObject>("BuildingButton");
     }
 
-    public void AddButton(int _ButtonData)
+    /// <summary>
+    /// 특정 카테고리의 건물들을 버튼으로 표시
+    /// </summary>
+    public void ShowBuildingsByCategory(BuildingCategory category)
     {
-        GameObject ButtonObj = Instantiate(buildingButtonUIPrefab, gridLayoutGroup.transform);
-        BuildingButtonUI Button = ButtonObj.GetComponent<BuildingButtonUI>();
+        RemoveAllButton();
 
-        buildingButtonUIs.Add(ButtonObj);
+        // BuildingDataManager에서 해당 카테고리의 건물 ID 가져오기
+        List<int> buildingIDs = BuildingDataManager.Instance.GetBuildingIDsByCategory(category);
 
+        foreach (int buildingID in buildingIDs)
+        {
+            AddButton(buildingID);
+        }
+    }
+
+    void AddButton(int buildingID)
+    {
+        GameObject buttonObj = Instantiate(buildingButtonUIPrefab, gridLayoutGroup.transform);
+        BuildingButtonUI button = buttonObj.GetComponent<BuildingButtonUI>();
+
+        button.Initialize(buildingID);
+
+        buildingButtonUIs.Add(buttonObj);
     }
 
     public void RemoveAllButton()
@@ -32,5 +48,4 @@ public class BuildingButtonsUI : UIBase
         }
         buildingButtonUIs.Clear();
     }
-
 }

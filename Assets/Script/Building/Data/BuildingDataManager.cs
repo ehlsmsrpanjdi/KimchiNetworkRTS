@@ -129,4 +129,22 @@ public class BuildingDataManager
     {
         return dataDict.ContainsKey(buildingID);
     }
+
+    /// <summary>
+    /// 특정 카테고리의 모든 건물 ID 가져오기
+    /// </summary>
+    public List<int> GetBuildingIDsByCategory(BuildingCategory category)
+    {
+        List<int> result = new List<int>();
+
+        foreach (var kvp in dataDict)
+        {
+            if (kvp.Value.category == category)
+            {
+                result.Add(kvp.Key);
+            }
+        }
+
+        return result;
+    }
 }
