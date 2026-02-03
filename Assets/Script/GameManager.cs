@@ -1,5 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
 using Unity.Netcode;
+using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
@@ -29,12 +30,17 @@ public class GameManager : MonoBehaviour
         await LoadManager.Instance.LoadTemp();
 
         Debug.Log("✅ Assets loaded!");
-
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback += OnPlayerJoined;
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnPlayerLeft;
+        }
     }
 
     public void StartHost()
     {
         NetworkManager.Singleton.StartHost();
+        EntranceManager.Instance.SpawnRocks();
     }
 
     public void StartClient()
@@ -58,4 +64,33 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void OnPlayerJoined(ulong clientId)
+    {
+        if (!NetworkManager.Singleton.IsServer) return;
+
+        LogHelper.Log($"Player joined: {clientId}");
+
+        // 입구 업데이트
+        EntranceManager.Instance?.UpdateEntranceWidth();
+    }
+
+    void OnPlayerLeft(ulong clientId)
+    {
+        if (!NetworkManager.Singleton.IsServer) return;
+
+        LogHelper.Log($"Player left: {clientId}");
+
+        // 입구 업데이트
+        EntranceManager.Instance?.UpdateEntranceWidth();
+    }
+
+
+    void OnDestroy()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnPlayerJoined;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnPlayerLeft;
+        }
+    }
 }

@@ -51,6 +51,11 @@ public class BuildingSystemUI : UIBase
 
     public void Toggle()
     {
+        if (GameManager.Instance.isGameStart == false)
+        {
+            return;
+        }
+
         // 기존 트윈 제거 (현재 위치 기준으로 새로 시작)
         DOTween.Kill(panel);
         DOTween.Kill(button);

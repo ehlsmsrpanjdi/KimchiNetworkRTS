@@ -7,6 +7,8 @@ public class GameManagerUI : MonoBehaviour
     [SerializeField] Button ClientBtn;
     [SerializeField] Button StartGameBtn;
 
+    bool isParticipated = false;
+
     private void Reset()
     {
         HostBtn = this.TryFindChild("HostBtn").GetComponent<Button>();
@@ -18,15 +20,27 @@ public class GameManagerUI : MonoBehaviour
     {
         HostBtn.onClick.AddListener(() =>
         {
+            if (isParticipated == true)
+            {
+                return;
+            }
+            isParticipated = true;
             GameManager.Instance.StartHost();
         });
         ClientBtn.onClick.AddListener(() =>
         {
+            if (isParticipated == true)
+            {
+                return;
+            }
+            isParticipated = true;
             GameManager.Instance.StartClient();
+            Destroy(this.gameObject);
         });
         StartGameBtn.onClick.AddListener(() =>
         {
             GameManager.Instance.GameStart();
+            Destroy(this.gameObject);
         });
     }
 }
