@@ -30,7 +30,7 @@ public class BuildingElementUI : UIBase
     void OnClickBattle()
     {
         buildingButtonsUI.RemoveAllButton();
-        buildingButtonsUI.ShowBuildingsByCategory(BuildingCategory.Attack);
+        buildingButtonsUI.ShowBuildingsByCategory(BuildingCategory.Tower);
     }
 
     void OnClickResource()

@@ -69,7 +69,7 @@ public class BuildingManager : NetworkBehaviour
     // ========== 건물 배치 ==========
 
     [Rpc(SendTo.Server)]
-    public void PlaceBuildingServerRpc(int buildingID, Vector3 worldPos, Vector2Int gridPos, ulong playerID)
+    public void PlaceBuildingServerRpc(string buildingID, Vector3 worldPos, Vector2Int gridPos, ulong playerID)
     {
         if (!IsServer) return;
 
@@ -80,22 +80,22 @@ public class BuildingManager : NetworkBehaviour
             return;
         }
 
-        string prefabName = GetPrefabNameByID(buildingID);
-        GameObject prefab = AssetManager.Instance.GetByName(prefabName);
+        // prefabKey 직접 사용 (GetPrefabNameByID 제거)
+        GameObject prefab = AssetManager.Instance.GetByName(data.prefabKey);
         if (prefab == null)
         {
-            LogHelper.LogError($"Building prefab not found: {prefabName}");
+            LogHelper.LogError($"Building prefab not found: {data.prefabKey}");
             return;
         }
 
         // 서버에서 직접 Instantiate
         GameObject buildingGo = Instantiate(prefab, worldPos, Quaternion.identity);
-        buildingGo.name = prefabName;
+        buildingGo.name = data.prefabKey;
 
         var netObj = buildingGo.GetComponent<NetworkObject>();
         if (netObj == null)
         {
-            LogHelper.LogError($"NetworkObject missing on {prefabName}");
+            LogHelper.LogError($"NetworkObject missing on {data.prefabKey}");
             Destroy(buildingGo);
             return;
         }
@@ -103,7 +103,7 @@ public class BuildingManager : NetworkBehaviour
         var buildingBase = buildingGo.GetComponent<BuildingBase>();
         if (buildingBase == null)
         {
-            LogHelper.LogError($"BuildingBase missing on {prefabName}");
+            LogHelper.LogError($"BuildingBase missing on {data.prefabKey}");
             Destroy(buildingGo);
             return;
         }
@@ -123,7 +123,7 @@ public class BuildingManager : NetworkBehaviour
         netObj.Spawn();
 
         // ✅ 증강 적용
-        AugmentManager.Instance.ApplyAugmentsToNewBuilding(buildingBase, playerID);
+        CardManager.Instance.ApplyAccumulatedPlayerCards(buildingBase, playerID);
 
         // ✅ 전체 리스트에 추가
         allBuildings.Add(buildingBase);
@@ -197,17 +197,4 @@ public class BuildingManager : NetworkBehaviour
         LogHelper.Log($"✅ Building removed: {building.buildingID}");
     }
 
-    // ========== Helper ==========
-
-    string GetPrefabNameByID(int buildingID)
-    {
-        return buildingID switch
-        {
-            1 => "AttackTower",
-            2 => "IronMine",
-            3 => "Wall",
-            4 => "WoodFarm",
-            _ => "AttackTower"
-        };
-    }
 }

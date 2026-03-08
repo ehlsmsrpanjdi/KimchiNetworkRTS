@@ -1,0 +1,9 @@
+CardId,Name,Rarity,Weight,EffectType,StatKey,Op,Value,EffectID,IconKey,Description
+CARDM_HP_C01,강화 외피,Common,100,StatMul,MaxHP,Mul,1.15,,,모든 적 체력 +15%
+CARDM_SPEED_C01,가속,Common,100,StatMul,MoveSpeed,Mul,1.1,,,모든 적 이동 속도 +10%
+CARDM_ARMOR_U01,장갑 추가,Uncommon,60,StatAdd,Armor,Add,1,,,모든 적 방어력 +1
+CARDM_ATK_U01,공격성,Uncommon,60,StatMul,AttackDamage,Mul,1.12,,,적 공격력 +12%
+CARDM_SPAWN_R01,증식,Rare,25,StatMul,CountBase,Mul,1.2,,,웨이브 기본 스폰 수 +20% (웨이브 시스템에서 해석)
+CARDM_REGEN_R01,자가 수복,Rare,20,AddBehavior,Regen,Add,1,,,적이 체력 재생(Behavior로 구현 권장)
+CARDM_BOSS_ENRAGE_E01,보스 격노,Epic,10,StatMul,BossDamage,Mul,1.25,,,보스 공격력 +25% (보스만 적용)
+CARDM_SHIELD_E01,충격 흡수막,Epic,10,AddBehavior,Shield,Add,1,,,적에게 보호막(Behavior) 부여

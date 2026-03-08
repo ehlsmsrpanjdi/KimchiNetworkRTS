@@ -9,7 +9,7 @@ public class BuildingButtonUI : MonoBehaviour
     [SerializeField] Image iconImage;
 
     [Header("Building Data")]
-    private int buildingID;
+    private string buildingID;
     private BuildingData data;
 
     void Reset()
@@ -26,7 +26,7 @@ public class BuildingButtonUI : MonoBehaviour
     /// <summary>
     /// 건물 데이터로 초기화
     /// </summary>
-    public void Initialize(int id)
+    public void Initialize(string id)
     {
         buildingID = id;
         data = BuildingDataManager.Instance.GetData(buildingID);
@@ -79,7 +79,8 @@ public class BuildingButtonUI : MonoBehaviour
 
     void SpawnBuildingGhost()
     {
-        string ghostPrefabName = GetGhostPrefabName(buildingID);
+        // prefabKey + "Ghost" 규칙 사용 (ex: "TowerBasic" → "TowerBasicGhost")
+        string ghostPrefabName = data.prefabKey + "Ghost";
         GameObject ghostPrefab = AssetManager.Instance.GetByName(ghostPrefabName);
 
         if (ghostPrefab == null)
@@ -103,16 +104,4 @@ public class BuildingButtonUI : MonoBehaviour
         LogHelper.Log($"✅ BuildingGhost spawned: {data.displayName}");
     }
 
-    string GetGhostPrefabName(int buildingID)
-    {
-        // BuildingGhost 프리팹 이름 규칙
-        return buildingID switch
-        {
-            1 => "AttackTowerGhost",
-            2 => "IronMineGhost",
-            3 => "WallGhost",
-            4 => "WoodFarmGhost",
-            _ => "AttackTowerGhost"
-        };
-    }
 }

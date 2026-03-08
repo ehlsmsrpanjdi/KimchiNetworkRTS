@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class BuildingGhost : MonoBehaviour
 {
     [Header("Building Info")]
-    public int buildingID;
+    public string buildingID;
     private BuildingData data;
 
     [Header("Grid")]

@@ -55,28 +55,28 @@ public class BuildingStat : NetworkBehaviour
 
         maxHP.Value = data.baseMaxHP;
         currentHP.Value = data.baseMaxHP;
-        defense.Value = data.baseDefense;
+        defense.Value = data.baseArmor;
 
-        if (data.isAttackTower)
+        if (data.canAttack)
         {
-            attackDamage.Value = data.baseAttackDamage;
-            attackSpeed.Value = data.baseAttackSpeed;
-            attackRange.Value = data.baseAttackRange;
+            attackDamage.Value = data.baseDamage;
+            attackSpeed.Value = data.baseFireRate;
+            attackRange.Value = data.baseRange;
         }
 
         // ✅ 자원 타워도 attackDamage, attackSpeed 사용
         if (data.category == BuildingCategory.Resource)
         {
-            attackDamage.Value = data.baseAttackDamage;  // 최대 스택
-            attackSpeed.Value = data.baseAttackSpeed;     // 초당 획득량
-            attackRange.Value = data.baseAttackRange;     // 수확 범위
+            attackDamage.Value = data.baseDamage;  // 최대 스택
+            attackSpeed.Value = data.baseFireRate;     // 초당 획득량
+            attackRange.Value = data.baseRange;     // 수확 범위
         }
 
         // ✅ 벽 타워
         if (data.category == BuildingCategory.Wall)
         {
-            attackSpeed.Value = data.baseAttackSpeed;  // 초당 수리량
-            attackRange.Value = data.baseAttackRange;  // 수리 범위
+            attackSpeed.Value = data.baseFireRate;  // 초당 수리량
+            attackRange.Value = data.baseRange;  // 수리 범위
         }
     }
 

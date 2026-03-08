@@ -19,11 +19,11 @@ public class Player : NetworkBehaviour
     private Dictionary<BuildingCategory, List<BuildingBase>> ownedBuildings = new Dictionary<BuildingCategory, List<BuildingBase>>();
 
     [Header("Augments")]
-    public NetworkList<int> ownedAugmentIDs;  // ✅ 추가
+    public NetworkList<int> ownedCardIDs;
 
     private void Awake()
     {
-        ownedAugmentIDs = new NetworkList<int>();  // ✅ 초기화
+        ownedCardIDs = new NetworkList<int>();
     }
 
     private void Reset()

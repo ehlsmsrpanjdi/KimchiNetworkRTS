@@ -6,7 +6,7 @@ using UnityEngine.AI;
 public class MonsterBase : NetworkBehaviour, ITakeDamage, IPoolObj
 {
     [Header("Monster Identity")]
-    public int monsterID;
+    public string monsterID;
     public MonsterData data;
 
     [Header("Components")]
@@ -30,11 +30,9 @@ public class MonsterBase : NetworkBehaviour, ITakeDamage, IPoolObj
     private GameObject currentTarget;
     private float lastAttackTime;
 
-    [Header("Spawned Time")]
-    private float spawnedTime; // 스폰된 시간 (게임 시간 기준)
 
-    private int pendingMonsterID;
-    private float pendingGameTime;
+    private string pendingMonsterID;
+    private int pendingWaveNumber;
     private bool needsInitialization = false;
 
     private void Reset()
@@ -50,44 +48,42 @@ public class MonsterBase : NetworkBehaviour, ITakeDamage, IPoolObj
         // ✅ Spawn 후 초기화 실행
         if (IsServer && needsInitialization)
         {
-            InitializeInternal(pendingMonsterID, pendingGameTime);
+            InitializeInternal(pendingMonsterID, pendingWaveNumber);
             needsInitialization = false;
         }
     }
 
     // ========== 초기화 ==========
-    public void Initialize(int id, float gameTime)
+    public void Initialize(string monsterID, int waveNumber)
     {
-        pendingMonsterID = id;
-        pendingGameTime = gameTime;
+        pendingMonsterID = monsterID;
+        pendingWaveNumber = waveNumber;
         needsInitialization = true;
     }
 
-    void InitializeInternal(int id, float gameTime)
+    void InitializeInternal(string monsterID, int waveNumber)
     {
-        LogHelper.Log($"🟢 MonsterBase.InitializeInternal called! ID: {id}, IsServer: {IsServer}");
+        LogHelper.Log($"🟢 MonsterBase.InitializeInternal called! ID: {monsterID}, wave: {waveNumber}, IsServer: {IsServer}");
 
-        monsterID = id;
-        spawnedTime = gameTime;
+        this.monsterID = monsterID;
 
-        data = MonsterDataManager.Instance.GetData(id);
+        data = MonsterDataManager.Instance.GetData(monsterID);
         if (data == null)
         {
-            LogHelper.LogError($"MonsterData not found: {id}");
+            LogHelper.LogError($"MonsterData not found: {monsterID}");
             return;
         }
 
         LogHelper.Log($"🟢 MonsterData loaded: {data.displayName}");
 
-        // 시간에 따른 스탯 스케일링 계산
-        float scalingMultiplier = CalculateScalingMultiplier(gameTime);
+        // waveNumber 기반 스케일링: baseStat × (1 + statRate × (wave - 1))
+        float scalingMultiplier = data.statRate * (waveNumber - 1);
 
-        // 스탯 초기화 (스케일링 적용)
-        maxHP.Value = data.baseMaxHP * (1f + data.hpScaling * scalingMultiplier);
+        maxHP.Value = data.baseMaxHP * (1f + scalingMultiplier);
         currentHP.Value = maxHP.Value;
-        defense.Value = data.baseDefense * (1f + data.defenseScaling * scalingMultiplier);
-        attackDamage.Value = data.baseAttackDamage * (1f + data.damageScaling * scalingMultiplier);
-        attackSpeed.Value = data.baseAttackSpeed;
+        defense.Value = data.baseArmor * (1f + scalingMultiplier);          // baseArmor
+        attackDamage.Value = data.baseAttackDamage * (1f + scalingMultiplier);
+        attackSpeed.Value = data.baseAttackRate;                             // baseAttackRate
         attackRange.Value = data.baseAttackRange;
         moveSpeed.Value = data.baseMoveSpeed;
 
@@ -101,22 +97,11 @@ public class MonsterBase : NetworkBehaviour, ITakeDamage, IPoolObj
         MonsterManager.Instance.RegisterMonster(this);
 
         // ✅ 몬스터 증강 적용
-        AugmentManager.Instance.ApplyAugmentsToNewMonster(this);
+        CardManager.Instance.ApplyAccumulatedMonsterCards(this);
 
         LogHelper.Log($"✅ Monster initialized: {data.displayName}");
     }
 
-    // ========== 시간 스케일링 계산 ==========
-    float CalculateScalingMultiplier(float gameTime)
-    {
-        if (data.scalingInterval <= 0f) return 0f;
-
-        // gameTime(초)을 분 단위로 변환
-        float gameTimeMinutes = gameTime / 60f;
-
-        // 강화 횟수 계산
-        return Mathf.Floor(gameTimeMinutes / data.scalingInterval);
-    }
 
     // ========== AI 업데이트 ==========
     void Update()

@@ -1,0 +1,9 @@
+EffectID,Effect Damage,Effect Desciprtion
+EFF_EXPLOSION_SMALL,30,소형 폭발. 광역 피해/넉백 연출용.
+EFF_EXPLOSION_LARGE,70,대형 폭발. 보스/고급 포탄 연출용.
+EFF_BURN_DOT,4,화상 DoT. 1초마다 피해(추가 시간/중첩은 코드에서).
+EFF_FREEZE,0,빙결/둔화. 피해 없이 이동속도 감소(수치/시간은 카드/업그레이드로).
+EFF_CHAIN_LIGHTNING,12,연쇄 번개. 타겟 간 튐(체인 횟수/감쇠는 코드에서).
+EFF_POISON_CLOUD,3,독 구름. 영역 DoT.
+EFF_STUN,0,기절. 행동 불가(시간은 코드에서).
+EFF_ARMOR_SHRED,0,방어력 감소 디버프(수치/시간은 카드에서).

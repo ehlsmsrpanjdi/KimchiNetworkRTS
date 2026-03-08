@@ -96,7 +96,7 @@ public class DebugWindow : EditorWindow
         }
 
         Vector3 worldPos = GridArea.Instance.GridToWorldWithSize(gridPos.x, gridPos.y, data.sizeX, data.sizeY);
-        BuildingManager.Instance.PlaceBuildingServerRpc(buildingID, worldPos, gridPos, 0);
+        BuildingManager.Instance.PlaceBuildingServerRpc(buildingID.ToString(), worldPos, gridPos, 0);
     }
 
     void SpawnGhost(int buildingID)
@@ -123,7 +123,7 @@ public class DebugWindow : EditorWindow
         var ghostScript = ghost.GetComponent<BuildingGhost>();
         if (ghostScript != null)
         {
-            ghostScript.buildingID = buildingID;
+            ghostScript.buildingID = buildingID.ToString();
             Debug.Log($"✅ Ghost spawned: {ghostPrefabName}");
         }
     }

@@ -1,0 +1,11 @@
+CardId,Name,Rarity,Weight,EffectType,StatKey,Op,Value,EffectID,IconKey,Description
+CARD_ALL_DMG_C01,화력 증강,Common,100,StatAdd,Damage,Add,2,,,타워 전체 피해 +2
+CARD_ALL_FR_C01,급탄 개선,Common,100,StatMul,FireRate,Mul,0.92,,,타워 전체 공격 간격 8% 감소
+CARD_ALL_RANGE_U01,조준 보정,Uncommon,60,StatAdd,Range,Add,1,,,타워 전체 사거리 +1
+CARD_ALL_SPLASH_U01,폭발 확장,Uncommon,55,StatAdd,SplashRadius,Add,0.2,,,광역 반경(있는 타워/함정만) +0.2
+CARD_GUN_FIRECOUNT_R01,이중 사격,Rare,25,StatAdd,FireCount,Add,1,,,기관포 계열 타워 탄환 개수 +1 (샷건/연사 확장)
+CARD_SNIPER_DMG_R01,관통탄,Rare,25,StatAdd,Damage,Add,25,,,저격 타워 피해 +25
+CARD_CANNON_SPLASH_R01,고폭 포탄,Rare,20,StatAdd,SplashRadius,Add,0.5,,,"캐논/지뢰 폭발 반경 +0.5, 연출 강화"
+CARD_FLAME_BURN_E01,지옥불 혼합,Epic,10,AddBehavior,BurnDOT,Add,1,,,화염 공격에 화상 DoT 부여(효과는 EffectID 참조)
+CARD_TESLA_CHAIN_E01,연쇄 증폭,Epic,10,AddBehavior,ChainLightning,Add,1,,,테슬라 계열: 연쇄 번개 활성화/강화
+CARD_WALL_REPAIR_U01,자동 수리,Uncommon,50,StatAdd,Damage,Add,1,,,벽/수리 스테이션의 초당 회복량 +1

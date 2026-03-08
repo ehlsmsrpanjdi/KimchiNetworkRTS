@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
     {
         // Addressables 로딩
         await LoadManager.Instance.LoadTemp();
+        ExcelDataLoader.Instance.LoadAll();
 
         Debug.Log("✅ Assets loaded!");
         if (NetworkManager.Singleton != null)
@@ -69,9 +70,6 @@ public class GameManager : MonoBehaviour
         if (!NetworkManager.Singleton.IsServer) return;
 
         LogHelper.Log($"Player joined: {clientId}");
-
-        // 입구 업데이트
-        EntranceManager.Instance?.UpdateEntranceWidth();
     }
 
     void OnPlayerLeft(ulong clientId)
@@ -79,9 +77,6 @@ public class GameManager : MonoBehaviour
         if (!NetworkManager.Singleton.IsServer) return;
 
         LogHelper.Log($"Player left: {clientId}");
-
-        // 입구 업데이트
-        EntranceManager.Instance?.UpdateEntranceWidth();
     }
 
 

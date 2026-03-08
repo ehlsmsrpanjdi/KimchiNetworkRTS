@@ -6,7 +6,7 @@ using System;
 public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 {
     [Header("Building Identity")]
-    public int buildingID;
+    public string buildingID;
 
     [Header("Grid Reference")]
     public Vector2Int gridPosition;
@@ -52,7 +52,7 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
     }
 
     // ========== 초기화 ==========
-    public void Initialize(int id, ulong ownerID, Vector2Int gridPos)
+    public void Initialize(string id, ulong ownerID, Vector2Int gridPos)
     {
         buildingID = id;
         ownerPlayerID.Value = ownerID;

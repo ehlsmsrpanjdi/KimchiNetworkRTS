@@ -9514,7 +9514,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   rockPrefab: {fileID: 9130889919032164281, guid: 177a2b837dd3f60479efc7d594ecfcef, type: 3}
   rockParent: {fileID: 2104774407}
-  totalRocks: 10
+  totalRocks: 20
   rockSpacing: 2
   rocksPerPlayer: 2
   navMeshSurface: {fileID: 99030332}

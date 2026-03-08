@@ -1,9 +1,21 @@
 ﻿using System.Collections.Generic;
-using Unity.AI.Navigation;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// 게임 시작 시 입구를 플레이어 수에 맞게 동적으로 조절
+///
+/// [동작 방식]
+/// - 돌(Rock) 오브젝트마다 NavMeshObstacle(carving=true) 부착
+/// - 입구를 열 때: obstacle.enabled = false → NavMesh가 해당 영역을 자동으로 뚫음
+/// - 입구를 닫을 때: obstacle.enabled = true → NavMesh가 해당 영역을 막음
+/// - NavMeshSurface.BuildNavMesh() 불필요 (carving이 실시간 처리)
+///
+/// [입구 계산]
+/// - 전체 돌 N개를 일렬로 배치, 처음엔 전부 막힘
+/// - 플레이어 추가 시 중앙부터 좌우 대칭으로 rocksPerPlayer개씩 열림
+/// </summary>
 public class EntranceManager : NetworkBehaviour
 {
     public static EntranceManager Instance;
@@ -15,42 +27,43 @@ public class EntranceManager : NetworkBehaviour
     [SerializeField] private float rockSpacing = 2f;
 
     [Header("Entrance Settings")]
-    [SerializeField] private int rocksPerPlayer = 2;  // 플레이어 1명당 제거할 돌 개수
+    [Tooltip("플레이어 1명 추가 시 열리는 돌 개수 (짝수 권장 - 좌우 대칭)")]
+    [SerializeField] private int rocksPerPlayer = 2;
 
-    [Header("NavMesh")]
-    [SerializeField] private NavMeshSurface navMeshSurface;
-
-    private List<NetworkObject> rocks = new List<NetworkObject>();
-    private int currentRemovedCount = 0;
+    private List<RockEntry> rocks = new List<RockEntry>();
     private int lastPlayerCount = 0;
+    private int currentOpenCount = 0;
+
+    private class RockEntry
+    {
+        public GameObject gameObject;
+        public NavMeshObstacle obstacle;
+        public bool isOpen;
+    }
 
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
     }
 
     void Start()
     {
-        if (IsServer)
-        {
-            SpawnRocks();
+        if (!IsServer) return;
 
-            NetworkManager.Singleton.OnClientConnectedCallback += OnPlayerJoined;
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnPlayerLeft;
+        SpawnRocks();
 
-            lastPlayerCount = 1;  // Host
-        }
+        NetworkManager.Singleton.OnClientConnectedCallback += OnPlayerJoined;
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnPlayerLeft;
+
+        lastPlayerCount = NetworkManager.Singleton.ConnectedClientsList.Count;
     }
 
-    void OnDestroy()
+    // warning 수정: override 추가
+    public override void OnDestroy()
     {
+        base.OnDestroy();
+
         if (NetworkManager.Singleton != null)
         {
             NetworkManager.Singleton.OnClientConnectedCallback -= OnPlayerJoined;
@@ -58,169 +71,192 @@ public class EntranceManager : NetworkBehaviour
         }
     }
 
+    // ========== 플레이어 연결 이벤트 ==========
+
     void OnPlayerJoined(ulong clientId)
     {
         if (!IsServer) return;
-        UpdateEntranceWidth();
+        UpdateEntrance();
     }
 
     void OnPlayerLeft(ulong clientId)
     {
         if (!IsServer) return;
+        // 나가도 입구는 줄이지 않음
     }
+
+    // ========== 돌 스폰 ==========
 
     public void SpawnRocks()
     {
         if (rockParent == null)
-        {
-            GameObject parent = new GameObject("RockParent");
-            rockParent = parent.transform;
-        }
+            rockParent = new GameObject("RockParent").transform;
 
         float totalWidth = (totalRocks - 1) * rockSpacing;
         float startX = -totalWidth / 2f;
 
         for (int i = 0; i < totalRocks; i++)
         {
-            Vector3 position = new Vector3(
-                startX + i * rockSpacing,
-                0f,
-                0f
-            );
+            Vector3 pos = new Vector3(startX + i * rockSpacing, 0f, 0f);
 
-            GameObject rockObj = Instantiate(rockPrefab, position, Quaternion.identity, rockParent);
+            GameObject rockObj = Instantiate(rockPrefab, pos, Quaternion.identity, rockParent);
             rockObj.name = $"Rock_{i}";
 
+            // NavMeshObstacle 부착 (없으면 자동 추가)
+            NavMeshObstacle obstacle = rockObj.GetComponent<NavMeshObstacle>();
+            if (obstacle == null)
+                obstacle = rockObj.AddComponent<NavMeshObstacle>();
+
+            // carving = true → NavMesh를 실시간으로 파서 몬스터가 이 칸을 못 지나감
+            obstacle.carving = true;
+            obstacle.carveOnlyStationary = true;
+            obstacle.shape = NavMeshObstacleShape.Box;
+            obstacle.size = Vector3.one * rockSpacing * 0.9f;
+            obstacle.enabled = true;  // 기본값: 닫힘
+
             NetworkObject netObj = rockObj.GetComponent<NetworkObject>();
+            if (netObj != null) netObj.Spawn();
 
-            if (netObj == null)
+            rocks.Add(new RockEntry
             {
-                LogHelper.LogError($"NetworkObject missing on Rock prefab!");
-                Destroy(rockObj);
-                continue;
-            }
-
-            netObj.Spawn();
-            rocks.Add(netObj);
+                gameObject = rockObj,
+                obstacle = obstacle,
+                isOpen = false
+            });
         }
 
-        LogHelper.Log($"✅ Spawned {totalRocks} rocks");
+        LogHelper.Log($"✅ Spawned {totalRocks} rocks with NavMeshObstacle(carving)");
     }
 
-    public void UpdateEntranceWidth()
+    // ========== 입구 업데이트 ==========
+
+    public void UpdateEntrance()
     {
         if (!IsServer) return;
 
-        int currentPlayerCount = NetworkManager.Singleton.ConnectedClientsList.Count;
+        //int currentPlayerCount = NetworkManager.Singleton.ConnectedClientsList.Count;
+        //if (currentPlayerCount <= lastPlayerCount) return;
 
-        // 플레이어 수가 증가했을 때만
-        if (currentPlayerCount <= lastPlayerCount) return;
+        //int newPlayers = currentPlayerCount - lastPlayerCount;
+        //int openCount = newPlayers * rocksPerPlayer;
 
-        // 추가된 플레이어 수
-        int newPlayers = currentPlayerCount - lastPlayerCount;
+        //OpenCenterRocks(openCount);
 
-        // 제거할 돌 개수
-        int removeCount = newPlayers * rocksPerPlayer;
-
-        if (removeCount > 0)
-        {
-            RemoveCenterRocks(removeCount);
-            currentRemovedCount += removeCount;
-            RebuildNavMeshServerRpc();
-        }
-
-        lastPlayerCount = currentPlayerCount;
-
-        LogHelper.Log($"🪨 Players: {currentPlayerCount} (+{newPlayers}), Removed: {removeCount}, Total removed: {currentRemovedCount}");
+        //lastPlayerCount = currentPlayerCount;
+        //LogHelper.Log($"🚪 Players: {currentPlayerCount} (+{newPlayers}), Opened +{openCount}, Total open: {currentOpenCount}/{totalRocks}");
     }
 
     /// <summary>
-    /// 중앙부터 좌우 대칭으로 제거
+    /// 닫힌 돌들 중 중앙부터 좌우 대칭으로 count개 열기
     /// </summary>
-    void RemoveCenterRocks(int count)
+    void OpenCenterRocks(int count)
     {
-        if (count <= 0 || count % 2 != 0)
+        if (count <= 0) return;
+
+        // 현재 닫힌 돌의 인덱스 목록
+        List<int> closedIndices = new List<int>();
+        for (int i = 0; i < rocks.Count; i++)
         {
-            LogHelper.LogError("count must be even number!");
+            if (!rocks[i].isOpen) closedIndices.Add(i);
+        }
+
+        if (closedIndices.Count == 0)
+        {
+            LogHelper.LogWarrning("No closed rocks left to open!");
             return;
         }
 
-        int pairsToRemove = count / 2;  // 2개씩 제거하니까
+        // 닫힌 돌 기준 중앙부터 좌우 대칭으로 열기
+        int center = closedIndices.Count / 2;
+        int opened = 0;
+        int offset = 0;
 
-        for (int i = 0; i < pairsToRemove; i++)
+        while (opened < count)
         {
-            int n = rocks.Count / 2;  // 현재 남은 돌 기준 중앙
+            int leftIdx = center - offset;
+            int rightIdx = center + offset;
 
-            int leftIndex = n - 1;
-            int rightIndex = n;
+            bool leftValid = leftIdx >= 0 && leftIdx < closedIndices.Count;
+            bool rightValid = rightIdx >= 0 && rightIdx < closedIndices.Count && rightIdx != leftIdx;
 
-            // 왼쪽 제거
-            if (leftIndex >= 0 && leftIndex < rocks.Count)
+            if (!leftValid && !rightValid) break;
+
+            if (leftValid && opened < count)
             {
-                NetworkObject leftRock = rocks[leftIndex];
-                if (leftRock != null && leftRock.IsSpawned)
-                {
-                    leftRock.Despawn();
-                    LogHelper.Log($"🪨 Removed Rock_{leftIndex}");
-                }
+                OpenRock(closedIndices[leftIdx]);
+                opened++;
             }
 
-            // 오른쪽 제거
-            if (rightIndex >= 0 && rightIndex < rocks.Count)
+            if (rightValid && opened < count)
             {
-                NetworkObject rightRock = rocks[rightIndex];
-                if (rightRock != null && rightRock.IsSpawned)
-                {
-                    rightRock.Despawn();
-                    LogHelper.Log($"🪨 Removed Rock_{rightIndex}");
-                }
+                OpenRock(closedIndices[rightIdx]);
+                opened++;
             }
+
+            offset++;
         }
     }
 
-    /// <summary>
-    /// 중앙부터 좌우 교대로 인덱스 계산
-    /// </summary>
-    int GetNextRockIndex(int centerIndex, int iteration)
+    void OpenRock(int rockIndex)
     {
-        if (iteration == 0)
-        {
-            return centerIndex;
-        }
+        if (rockIndex < 0 || rockIndex >= rocks.Count) return;
 
-        bool isLeft = iteration % 2 == 1;
+        var rock = rocks[rockIndex];
+        if (rock.isOpen) return;
 
-        if (isLeft)
-        {
-            int offset = (iteration + 1) / 2;
-            return centerIndex - offset;
-        }
-        else
-        {
-            int offset = iteration / 2;
-            return centerIndex + offset;
-        }
+        // obstacle 비활성화 → NavMesh가 이 위치를 자동으로 뚫음
+        rock.obstacle.enabled = false;
+        rock.isOpen = true;
+        currentOpenCount++;
+
+        LogHelper.Log($"🚪 Rock_{rockIndex} opened");
     }
 
-
-    [Rpc(SendTo.Server)]
-    void RebuildNavMeshServerRpc()
+    void CloseRock(int rockIndex)
     {
-        if (navMeshSurface == null)
-        {
-            navMeshSurface = FindFirstObjectByType<NavMeshSurface>();
-        }
+        if (rockIndex < 0 || rockIndex >= rocks.Count) return;
 
-        if (navMeshSurface != null)
-        {
-            navMeshSurface.BuildNavMesh();
-            LogHelper.Log("✅ NavMesh rebuilt");
-        }
+        var rock = rocks[rockIndex];
+        if (!rock.isOpen) return;
+
+        rock.obstacle.enabled = true;
+        rock.isOpen = false;
+        currentOpenCount--;
+
+        LogHelper.Log($"🪨 Rock_{rockIndex} closed");
     }
 
-    [ContextMenu("Reset Entrance")]
-    public void ResetEntrance()
+    // ========== 외부 제어 ==========
+
+    public void SetRockOpen(int rockIndex, bool open)
     {
-        LogHelper.LogWarrning("Reset not implemented - restart server to reset entrance");
+        if (!IsServer) return;
+        if (open) OpenRock(rockIndex);
+        else CloseRock(rockIndex);
+    }
+
+    [ContextMenu("Open All")]
+    public void OpenAll()
+    {
+        for (int i = 0; i < rocks.Count; i++) OpenRock(i);
+    }
+
+    [ContextMenu("Close All")]
+    public void CloseAll()
+    {
+        for (int i = 0; i < rocks.Count; i++) CloseRock(i);
+    }
+
+    // ========== 디버그 ==========
+
+    void OnDrawGizmosSelected()
+    {
+        if (rocks == null) return;
+        foreach (var rock in rocks)
+        {
+            if (rock.gameObject == null) continue;
+            Gizmos.color = rock.isOpen ? Color.green : Color.red;
+            Gizmos.DrawWireCube(rock.gameObject.transform.position, Vector3.one * rockSpacing * 0.9f);
+        }
     }
 }

@@ -1,65 +1,56 @@
-﻿using UnityEngine;
 using System;
+using UnityEngine;
 
+// ===== 웨이브 내 스폰 정보 (엑셀 Waves 시트 1행 = 1 WaveSpawnInfo) =====
 [Serializable]
 public class WaveSpawnInfo
 {
-    public int monsterID;           // 스폰될 몬스터 ID
-    public int baseSpawnCount;      // 기본 스폰 수
-    public int perPlayerSpawnCount; // 플레이어당 추가 스폰 수
+    public string monsterID;            // 엑셀 EnemyId (ex: "ENEMY_GRUNT_01")
+    public int countBase;               // 기본 스폰 수
+    public int countPerPlayer;          // 플레이어당 추가 스폰 수
+    public float spawnDurationSec;      // 스폰 지속 시간(초)
+    public float spawnIntervalSec;      // 스폰 간격(초) - 엑셀에서 직접 지정
 }
 
+// ===== 웨이브 데이터 (동일 waveNumber를 가진 여러 행을 하나로 묶음) =====
 [Serializable]
 public class WaveData
 {
-    // ===== 웨이브 정보 =====
-    public int waveID;              // 웨이브 고유 ID
-    public int waveNumber;          // 표시용 웨이브 번호 (1웨이브, 2웨이브...)
+    public int waveNumber;
+    public WaveSpawnInfo[] spawnInfos;
 
-    // ===== 스폰 정보 =====
-    public WaveSpawnInfo[] spawnInfos; // 이 웨이브에서 스폰될 몬스터들
+    // 보스 웨이브 여부 (IsBossWave = TRUE인 행이 있으면 true)
+    public bool isBossWave;
 
-    // ===== 스폰 타이밍 =====
-    [Tooltip("웨이브 진행 시간 (초)")]
-    public float waveDuration = 60f;
+    // 이 웨이브 종료 후 제시할 카드 선택지 수
+    public int cardChoices;             // 엑셀 CardMonsterChoices
 
-    // ===== 보스 정보 =====
-    [Tooltip("보스 몬스터 ID (-1이면 보스 없음)")]
-    public int bossMonsterID = -1;
+    // ========== 계산 메서드 ==========
 
-    // ===== 계산 메서드 =====
     /// <summary>
-    /// 특정 몬스터의 총 스폰 수 계산
+    /// 특정 monsterID의 총 스폰 수
     /// </summary>
-    public int GetTotalSpawnCount(int monsterID, int playerCount)
+    public int GetTotalCount(string monsterID, int playerCount)
     {
         foreach (var info in spawnInfos)
         {
             if (info.monsterID == monsterID)
-            {
-                return info.baseSpawnCount + (info.perPlayerSpawnCount * playerCount);
-            }
+                return info.countBase + info.countPerPlayer * playerCount;
         }
         return 0;
     }
 
     /// <summary>
-    /// 특정 몬스터의 스폰 간격 계산
-    /// 예: 10마리, 60초 → 6초마다 1마리
+    /// 엑셀에 직접 정의된 스폰 간격 반환
+    /// (기존: waveDuration/totalCount로 계산 → 변경: 엑셀 값 직접 사용)
     /// </summary>
-    public float GetSpawnInterval(int monsterID, int playerCount)
+    public float GetSpawnInterval(string monsterID)
     {
-        int totalCount = GetTotalSpawnCount(monsterID, playerCount);
-        if (totalCount <= 0) return 0f;
-
-        return waveDuration / totalCount;
-    }
-
-    /// <summary>
-    /// 이 웨이브에 보스가 있는지
-    /// </summary>
-    public bool HasBoss()
-    {
-        return bossMonsterID >= 0;
+        foreach (var info in spawnInfos)
+        {
+            if (info.monsterID == monsterID)
+                return info.spawnIntervalSec;
+        }
+        return 1f;
     }
 }

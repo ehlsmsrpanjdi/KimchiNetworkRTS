@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 public class WaveDataManager
 {
@@ -10,88 +10,75 @@ public class WaveDataManager
             if (instance == null)
             {
                 instance = new WaveDataManager();
-                instance.LoadTestData();
             }
             return instance;
         }
     }
 
+    // waveNumber → WaveData
     private Dictionary<int, WaveData> dataDict = new Dictionary<int, WaveData>();
 
-    void LoadTestData()
+    // ========== 엑셀 Waves 시트 전체 반영 ==========
+    /// <summary>
+    /// 엑셀 1행을 버퍼에 추가. 동일 waveNumber면 spawnInfo만 추가
+    /// </summary>
+    public void AddRow(
+        Dictionary<int, WaveData> buffer,
+        int waveNumber, string enemyID,
+        int countBase, int perPlayer,
+        float duration, float interval,
+        bool isBoss, int cardChoices)
     {
-        // Wave 1: 좀비 10마리
-        var wave1 = new WaveData
+        if (!buffer.TryGetValue(waveNumber, out var waveData))
         {
-            waveID = 1,
-            waveNumber = 1,
-            spawnInfos = new WaveSpawnInfo[]
+            waveData = new WaveData
             {
-                new WaveSpawnInfo
-                {
-                    monsterID = 1,          // 좀비
-                    baseSpawnCount = 10,    // 기본 10마리
-                    perPlayerSpawnCount = 2 // 플레이어당 +2마리
-                }
-            },
-            waveDuration = 60f, // 60초
-            bossMonsterID = -1  // 보스 없음
+                waveNumber = waveNumber,
+                isBossWave = isBoss,
+                cardChoices = cardChoices,
+                spawnInfos = new WaveSpawnInfo[0]
+            };
+            buffer[waveNumber] = waveData;
+        }
+
+        // isBossWave는 한 행이라도 true면 전체 true
+        if (isBoss) waveData.isBossWave = true;
+
+        // spawnInfos 배열에 추가
+        var newInfo = new WaveSpawnInfo
+        {
+            monsterID = enemyID,
+            countBase = countBase,
+            countPerPlayer = perPlayer,
+            spawnDurationSec = duration,
+            spawnIntervalSec = interval
         };
 
-        // Wave 2: 좀비 10마리 + 궁수 20마리
-        var wave2 = new WaveData
-        {
-            waveID = 2,
-            waveNumber = 2,
-            spawnInfos = new WaveSpawnInfo[]
-            {
-                new WaveSpawnInfo
-                {
-                    monsterID = 1,
-                    baseSpawnCount = 10,
-                    perPlayerSpawnCount = 3
-                },
-                new WaveSpawnInfo
-                {
-                    monsterID = 2,          // 궁수
-                    baseSpawnCount = 20,
-                    perPlayerSpawnCount = 5
-                }
-            },
-            waveDuration = 60f,
-            bossMonsterID = -1
-        };
-
-        // Wave 3: 좀비 10마리 + 보스 1마리
-        var wave3 = new WaveData
-        {
-            waveID = 3,
-            waveNumber = 3,
-            spawnInfos = new WaveSpawnInfo[]
-            {
-                new WaveSpawnInfo
-                {
-                    monsterID = 1,
-                    baseSpawnCount = 10,
-                    perPlayerSpawnCount = 3
-                }
-            },
-            waveDuration = 60f,
-            bossMonsterID = 6 // 좀비 왕
-        };
-
-        dataDict[1] = wave1;
-        dataDict[2] = wave2;
-        dataDict[3] = wave3;
+        var oldList = new List<WaveSpawnInfo>(waveData.spawnInfos);
+        oldList.Add(newInfo);
+        waveData.spawnInfos = oldList.ToArray();
     }
 
-    public WaveData GetData(int waveID)
+    public int Count => dataDict.Count;
+
+    public void Clear() => dataDict.Clear();
+    public void LoadFromBuffer(Dictionary<int, WaveData> buffer)
     {
-        if (dataDict.TryGetValue(waveID, out WaveData data))
-        {
+        foreach (var kvp in buffer)
+            dataDict[kvp.Key] = kvp.Value;
+    }
+
+    // ========== 조회 ==========
+
+    public WaveData GetData(int waveNumber)
+    {
+        if (dataDict.TryGetValue(waveNumber, out var data))
             return data;
-        }
-        LogHelper.LogError($"WaveData not found: {waveID}");
+
+        LogHelper.LogError($"WaveData not found: wave {waveNumber}");
         return null;
     }
+
+    public bool HasWave(int waveNumber) => dataDict.ContainsKey(waveNumber);
+    public int TotalWaveCount => dataDict.Count;
 }

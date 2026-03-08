@@ -84,10 +84,10 @@ public class ResourceTower : BuildingBase
 
         if (data != null && data.category == BuildingCategory.Resource)
         {
-            resourceType = data.resourceType;
-            maxStack = data.baseAttackDamage;
-            stackGainRate = data.baseAttackSpeed;
-            harvestDuration = data.harvestDuration;
+            resourceType = data.resourceGenType;
+            maxStack = data.baseDamage;
+            stackGainRate = data.baseFireRate;
+            harvestDuration = data.baseRange;
 
             isInitialized = true;
             LogHelper.Log($"✅ ResourceTower initialized: {data.displayName}");
