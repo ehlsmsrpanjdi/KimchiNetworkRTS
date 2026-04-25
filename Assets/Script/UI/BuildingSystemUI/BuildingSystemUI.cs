@@ -49,9 +49,15 @@ public class BuildingSystemUI : UIBase
         isOpen = false;
     }
 
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Tab))
+            Toggle();
+    }
+
     public void Toggle()
     {
-        if (GameManager.Instance.isGameStart == false)
+        if (!GameManager.Instance.isGameStart.Value)
         {
             return;
         }

@@ -87,6 +87,10 @@ public class Player : NetworkBehaviour, ITakeDamage
     {
         isDead.Value = true;
         LogHelper.Log($"💀 Player {OwnerClientId} died!");
+
+        foreach (var buildings in ownedBuildings.Values)
+            foreach (var building in buildings)
+                building.SetDisabled(true);
     }
 
     void OnDeadStateChanged(bool prev, bool next)
@@ -96,9 +100,11 @@ public class Player : NetworkBehaviour, ITakeDamage
         if (controller != null)
             controller.enabled = false;
 
-        var rend = GetComponent<Renderer>();
-        if (rend != null)
-            rend.material.color = Color.gray;
+        foreach (var rend in GetComponentsInChildren<Renderer>())
+            rend.enabled = false;
+
+        foreach (var col in GetComponentsInChildren<Collider>())
+            col.enabled = false;
     }
 
     // ========== 건물 소유 관리 ==========

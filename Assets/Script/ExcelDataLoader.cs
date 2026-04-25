@@ -81,7 +81,6 @@ public class ExcelDataLoader
                     targetingRule       = ParseEnum<TargetingRule>(row["TargetingRule"], TargetingRule.Nearest),
                     splashRadius        = ParseFloat(row["SplashRadius"]),
                     bulletSpeed         = ParseFloat(row["BulletSpeed"]),
-                    bulletMovementType  = ParseEnum<BulletMovementType>(row["BulletMovement ID"], BulletMovementType.Straight),
                     resourceGenType     = ParseEnum<ResourceType>(row["ResourceGen_ResourceId"], ResourceType.Iron),
                     tradeEnabled        = ParseBool(row["TradeEnabled"]),
                     prefabKey           = row["PrefabKey"],

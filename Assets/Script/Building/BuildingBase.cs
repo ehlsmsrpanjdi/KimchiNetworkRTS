@@ -31,6 +31,14 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
     public event Action<MonsterBase> OnHit;
     public event Action OnDamaged;
 
+    public bool IsDisabled { get; private set; }
+
+    public void SetDisabled(bool disabled)
+    {
+        if (!IsServer) return;
+        IsDisabled = disabled;
+    }
+
     // ========== Unity Lifecycle ==========
     protected virtual void Awake()
     {
@@ -39,15 +47,29 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
         stat = GetComponent<BuildingStat>();
     }
 
+    private string pendingID;
+    private ulong pendingOwnerID;
+    private bool needsInit;
+
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
         stat.currentHP.OnValueChanged += OnHealthChanged;
+
+        if (IsServer && needsInit)
+        {
+            ownerPlayerID.Value = pendingOwnerID;
+            stat.InitializeFromData(data);
+            SetupProximityCollider();
+            OnInitialized();
+            needsInit = false;
+        }
     }
 
     protected virtual void Update()
     {
         if (!IsServer) return;
+        if (IsDisabled) return;
         modifierManager?.Update();
     }
 
@@ -55,8 +77,9 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
     public void Initialize(string id, ulong ownerID, Vector2Int gridPos)
     {
         buildingID = id;
-        ownerPlayerID.Value = ownerID;
         gridPosition = gridPos;
+        pendingOwnerID = ownerID;
+        needsInit = true;
 
         data = BuildingDataManager.Instance.GetData(id);
         if (data == null)
@@ -65,17 +88,12 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
             return;
         }
 
-        stat.InitializeFromData(data);
         SetupGrid();
         SetupNavMeshObstacle();
-        SetupProximityCollider();  // ✅ 추가
-
-        OnInitialized();
     }
 
     protected virtual void OnInitialized()
     {
-        // 하위 클래스에서 구현
     }
 
     // ========== Proximity Collider 설정 ==========

@@ -1,5 +1,5 @@
 WaveId,WaveNumber,EnemyId,CountBase,CountPerPlayer,SpawnDurationSec,SpawnIntervalSec,IsBossWave,CardMonsterChoices,Notes
-WAVE_001A,1,ENEMY_GRUNT_01,12,4,12,0.8,FALSE,3,튜토리얼: 기본 근접
+WAVE_001A,1,ENEMY_GRUNT_01,3,0,12,0.8,FALSE,3,튜토리얼: 기본 근접
 WAVE_002A,2,ENEMY_GRUNT_01,16,5,14,0.7,FALSE,3,수 증가
 WAVE_003A,3,ENEMY_RUNNER_01,10,4,12,0.6,FALSE,3,빠른 적 등장
 WAVE_004A,4,ENEMY_GRUNT_01,14,4,12,0.7,FALSE,3,혼합 웨이브

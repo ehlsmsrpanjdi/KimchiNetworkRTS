@@ -20,6 +20,7 @@ public class WaveManager : NetworkBehaviour
     [Header("Wave State")]
     public NetworkVariable<int> currentWaveNum = new NetworkVariable<int>(0);
     public NetworkVariable<bool> isWaveActive = new NetworkVariable<bool>(false);
+    public NetworkVariable<float> nextWaveCountdown = new NetworkVariable<float>(0f);
 
     private WaveData currentWaveData;
     private Dictionary<string, int> spawnedCount = new Dictionary<string, int>();
@@ -67,6 +68,7 @@ public class WaveManager : NetworkBehaviour
 
         isWaveActive.Value = true;
         currentWaveNum.Value = currentWaveData.waveNumber;
+        nextWaveCountdown.Value = 0f;
         waveStartTime = Time.time;
 
         spawnedCount.Clear();
@@ -183,7 +185,14 @@ public class WaveManager : NetworkBehaviour
     IEnumerator StartNextWaveAfterDelay(float delay)
     {
         LogHelper.Log($"⏰ Next wave in {delay}s...");
-        yield return new WaitForSeconds(delay);
+        float remaining = delay;
+        while (remaining > 0f)
+        {
+            nextWaveCountdown.Value = remaining;
+            yield return new WaitForSeconds(1f);
+            remaining -= 1f;
+        }
+        nextWaveCountdown.Value = 0f;
 
         if (WaveDataManager.Instance.HasWave(currentWaveNumber))
         {

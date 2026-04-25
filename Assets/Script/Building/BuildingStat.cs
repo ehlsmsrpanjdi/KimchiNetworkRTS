@@ -51,7 +51,6 @@ public class BuildingStat : NetworkBehaviour
     // ========== BuildingData에서 초기화 ==========
     public void InitializeFromData(BuildingData data)
     {
-        if (!IsServer) return;
 
         maxHP.Value = data.baseMaxHP;
         currentHP.Value = data.baseMaxHP;

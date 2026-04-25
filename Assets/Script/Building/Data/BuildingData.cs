@@ -36,18 +36,6 @@ public enum TargetingRule
     Strongest
 }
 
-// ========== 탄환 이동 방식 (엑셀 Enums: BulletMovement ID) ==========
-public enum BulletMovementType
-{
-    Straight,
-    Arc,
-    Beam,
-    Homing,
-    Hitscan,
-    Instant,
-    Area
-}
-
 // ========== 건설 비용 ==========
 [Serializable]
 public struct ResourceCost : INetworkSerializable
@@ -96,7 +84,6 @@ public class BuildingData
     public TargetingRule targetingRule;
     public float splashRadius;      // SplashRadius
     public float bulletSpeed;
-    public BulletMovementType bulletMovementType;
 
     // ===== 자원 타워 전용 =====
     public ResourceType resourceGenType;    // 생산 자원 종류 (Wood / Metal)

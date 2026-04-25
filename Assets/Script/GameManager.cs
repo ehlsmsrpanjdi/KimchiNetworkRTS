@@ -8,10 +8,8 @@ public class GameManager : NetworkBehaviour
     static GameManager _instance;
     public static GameManager Instance { get { return _instance; } }
 
-    public bool isGameStart
-    {
-        get; private set;
-    }
+    public NetworkVariable<bool> isGameStart = new NetworkVariable<bool>(false,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public NetworkVariable<bool> isGameOver = new NetworkVariable<bool>(false,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -69,7 +67,7 @@ public class GameManager : NetworkBehaviour
         }
 
         LogHelper.Log("GameStart");
-        isGameStart = true;
+        isGameStart.Value = true;
         isGameOver.Value = false;
 
         SpawnCore();
@@ -116,7 +114,7 @@ public class GameManager : NetworkBehaviour
 
         LogHelper.Log("💥 GameOver!");
         isGameOver.Value = true;
-        isGameStart = false;
+        isGameStart.Value = false;
         WaveManager.Instance.isWaveActive.Value = false;
 
         GameOverClientRpc();

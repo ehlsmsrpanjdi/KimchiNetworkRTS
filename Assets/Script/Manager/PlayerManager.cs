@@ -68,7 +68,7 @@ public class PlayerManager
         List<Player> alivePlayers = new List<Player>();
         foreach (var player in players.Values)
         {
-            if (player != null && player.gameObject.activeSelf)
+            if (player != null && !player.isDead.Value)
             {
                 alivePlayers.Add(player);
             }

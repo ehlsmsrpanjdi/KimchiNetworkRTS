@@ -963,7 +963,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   spawnPoint: {fileID: 1252318005}
-  debugDisableSpawn: 1
+  debugDisableSpawn: 0
   currentWaveNumber: 1
   gameTime: 0
   cardSelectEveryNWaves: 1
@@ -8157,7 +8157,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resourceAmountText: {fileID: 527734854}
-  resourceType: 0
 --- !u!1001 &1779347670
 PrefabInstance:
   m_ObjectHideFlags: 0

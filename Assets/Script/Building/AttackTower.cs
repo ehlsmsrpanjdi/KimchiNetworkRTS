@@ -184,13 +184,7 @@ public class AttackTower : BuildingBase
         }
 
         float finalDamage = stat.GetFinalAttackDamage(modifierManager);
-        bullet.Initialize(
-            this,
-            target,
-            finalDamage,
-            (int)data.bulletMovementType,
-            data.bulletSpeed
-        );
+        bullet.Initialize(this, target, finalDamage, data.bulletSpeed);
 
         netObj.Spawn();
     }
