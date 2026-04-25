@@ -1,178 +1,77 @@
-﻿using System;
+using System;
 using Unity.Netcode;
 
 public class PlayerResource : NetworkBehaviour
 {
-    // ========== 각 자원별 NetworkVariable ==========
-
-    public NetworkVariable<int> Wood = new NetworkVariable<int>(
-        100,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server
-    );
-
     public NetworkVariable<int> Iron = new NetworkVariable<int>(
         100,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server
     );
 
-    // ========== 이벤트 ==========
-    public Action<ResourceType, int> OnResourceChanged;
+    public Action<int> OnResourceChanged;
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+        Iron.OnValueChanged += (prev, next) => OnResourceChanged?.Invoke(next);
 
-        // 각 자원 변경 이벤트 등록
-        Wood.OnValueChanged += (prev, next) => OnResourceValueChanged(ResourceType.Wood, next);
-        Iron.OnValueChanged += (prev, next) => OnResourceValueChanged(ResourceType.Iron, next);
-
-        // 초기값 UI 업데이트
         if (IsOwner)
-        {
-            OnResourceChanged?.Invoke(ResourceType.Wood, Wood.Value);
-            OnResourceChanged?.Invoke(ResourceType.Iron, Iron.Value);
-        }
+            OnResourceChanged?.Invoke(Iron.Value);
     }
 
-    void OnResourceValueChanged(ResourceType type, int newValue)
-    {
-        if (IsOwner)
-        {
-            OnResourceChanged?.Invoke(type, newValue);
-        }
-    }
+    public bool HasEnoughResource(int amount) => Iron.Value >= amount;
 
-    // ========== 단일 자원 확인 ==========
-    public bool HasEnoughResource(ResourceType type, int amount)
-    {
-        return GetResource(type) >= amount;
-    }
-
-    // ✅ 여러 자원 확인
     public bool HasEnoughResources(ResourceCost[] costs)
     {
-        if (costs == null || costs.Length == 0)
-            return true;
-
-        foreach (var cost in costs)
-        {
-            if (!HasEnoughResource(cost.resourceType, cost.amount))
-            {
-                return false;
-            }
-        }
-        return true;
+        if (costs == null || costs.Length == 0) return true;
+        int total = 0;
+        foreach (var cost in costs) total += cost.amount;
+        return Iron.Value >= total;
     }
 
-    public int GetResource(ResourceType type)
-    {
-        return type switch
-        {
-            ResourceType.Wood => Wood.Value,
-            ResourceType.Iron => Iron.Value,
-            _ => 0
-        };
-    }
+    public int GetResource() => Iron.Value;
 
-    // ========== 단일 자원 사용 ==========
-    public bool TrySpendResource(ResourceType type, int amount)
+    public bool TrySpendResource(int amount)
     {
         if (!IsOwner) return false;
-
-        if (!HasEnoughResource(type, amount))
+        if (!HasEnoughResource(amount))
         {
-            LogHelper.LogWarrning($"{type} 부족! 필요: {amount}, 보유: {GetResource(type)}");
+            LogHelper.LogWarrning($"Iron 부족! 필요: {amount}, 보유: {Iron.Value}");
             return false;
         }
-
-        SpendResourceServerRpc(type, amount);
+        SpendResourceServerRpc(amount);
         return true;
     }
 
-    // ✅ 여러 자원 사용
     public bool TrySpendResources(ResourceCost[] costs)
     {
         if (!IsOwner) return false;
-
-        if (costs == null || costs.Length == 0)
-            return true;
-
-        // 로컬 체크
         if (!HasEnoughResources(costs))
         {
             LogHelper.LogWarrning("자원 부족!");
             return false;
         }
-
-        // Server에 요청
-        SpendResourcesServerRpc(costs);
+        int total = 0;
+        foreach (var cost in costs) total += cost.amount;
+        SpendResourceServerRpc(total);
         return true;
     }
 
     [Rpc(SendTo.Server)]
-    void SpendResourceServerRpc(ResourceType type, int amount)
+    void SpendResourceServerRpc(int amount)
     {
-        if (!HasEnoughResource(type, amount))
-        {
-            LogHelper.LogWarrning("치팅 시도 감지!");
-            return;
-        }
-
-        switch (type)
-        {
-            case ResourceType.Wood:
-                Wood.Value -= amount;
-                break;
-            case ResourceType.Iron:
-                Iron.Value -= amount;
-                break;
-        }
+        if (Iron.Value < amount) { LogHelper.LogWarrning("치팅 시도 감지!"); return; }
+        Iron.Value -= amount;
     }
 
-    [Rpc(SendTo.Server)]
-    void SpendResourcesServerRpc(ResourceCost[] costs)
+    public void AddResource(int amount)
     {
-        // Server에서 재검증
-        if (!HasEnoughResources(costs))
-        {
-            LogHelper.LogWarrning("치팅 시도 감지!");
-            return;
-        }
-
-        foreach (var cost in costs)
-        {
-            switch (cost.resourceType)
-            {
-                case ResourceType.Wood:
-                    Wood.Value -= cost.amount;
-                    break;
-                case ResourceType.Iron:
-                    Iron.Value -= cost.amount;
-                    break;
-            }
-        }
-    }
-
-    // ========== 자원 추가 ==========
-    public void AddResource(ResourceType type, int amount)
-    {
+        if (IsServer) { Iron.Value += amount; return; }
         if (!IsOwner) return;
-        AddResourceServerRpc(type, amount);
+        AddResourceServerRpc(amount);
     }
 
     [Rpc(SendTo.Server)]
-    void AddResourceServerRpc(ResourceType type, int amount)
-    {
-        switch (type)
-        {
-            case ResourceType.Wood:
-                Wood.Value += amount;
-                break;
-            case ResourceType.Iron:
-                Iron.Value += amount;
-                break;
-        }
-    }
+    void AddResourceServerRpc(int amount) => Iron.Value += amount;
 }

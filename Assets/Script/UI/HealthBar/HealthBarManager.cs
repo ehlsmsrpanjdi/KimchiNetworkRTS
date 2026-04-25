@@ -5,10 +5,7 @@ public class HealthBarManager : MonoBehaviour
 {
     public static HealthBarManager Instance;
 
-    [Header("Pool Parent")]
-    [SerializeField] private Transform healthBarPool;  // HealthBarPool 드래그
-
-    [Header("Prefab")]
+    [SerializeField] private Transform healthBarPool;
     [SerializeField] private GameObject healthBarPrefab;
 
     private Queue<HealthBarUI> pool = new Queue<HealthBarUI>();
@@ -16,35 +13,19 @@ public class HealthBarManager : MonoBehaviour
 
     [SerializeField] private int initialPoolSize = 50;
 
+    private void Reset()
+    {
+        healthBarPool = transform.Find("HealthBarPool");
+    }
+
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
     }
 
     void Start()
     {
-        // ✅ healthBarPool이 null이면 자동으로 자식에서 찾기
-        if (healthBarPool == null)
-        {
-            healthBarPool = transform.Find("HealthBarPool");
-
-            // 없으면 생성
-            if (healthBarPool == null)
-            {
-                GameObject poolObj = new GameObject("HealthBarPool");
-                poolObj.transform.SetParent(transform);
-                healthBarPool = poolObj.AddComponent<RectTransform>();
-            }
-        }
-
-        // 초기 풀 생성
         for (int i = 0; i < initialPoolSize; i++)
         {
             CreateHealthBar();

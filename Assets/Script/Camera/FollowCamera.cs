@@ -10,7 +10,8 @@ public class FollowCamera : MonoBehaviour
         get { return instance; }
     }
 
-    public Camera Camera { get; private set; }
+    [SerializeField] Camera cam;
+    public Camera Camera => cam;
 
     [Header("RTS Camera Settings")]
     [SerializeField] private float edgeScrollSize = 20f;           // 화면 가장자리 감지 범위 (픽셀)
@@ -29,12 +30,16 @@ public class FollowCamera : MonoBehaviour
     [Header("Optional: Keyboard Scroll")]
     [SerializeField] private bool useKeyboardScroll = true;        // WASD로도 이동 가능
 
+    private void Reset()
+    {
+        cam = GetComponent<Camera>();
+    }
+
     private void Awake()
     {
         instance = this;
-        Camera = GetComponent<Camera>();
+        if (cam == null) cam = GetComponent<Camera>();
 
-        // 초기 높이 설정
         Vector3 pos = transform.position;
         pos.y = currentZoom;
         transform.position = pos;

@@ -15,8 +15,38 @@ MonoBehaviour:
   m_GroupName: BuildingGhost
   m_GUID: 311e33945204ea1408168169fcbfcb1e
   m_SerializeEntries:
-  - m_GUID: b7bd443c5edb83d42b8518619aac2732
-    m_Address: AttackTowerGhost
+  - m_GUID: 140ccdc330fe7f94cb94c4a4a93c66ee
+    m_Address: ResourceBasicGhost
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BuildingGhost
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3aca5c11c350f774d9e9d525cbbf3cd3
+    m_Address: MarketGhost
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BuildingGhost
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 55151bb5f04345a4197ecdfb9253622c
+    m_Address: TrapBasicGhost
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BuildingGhost
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9db624c6e55902945b4f04f9f623bdce
+    m_Address: MarketGhost
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BuildingGhost
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b71f72f826939d94b966a26d1a03df8a
+    m_Address: TowerBasicGhost
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BuildingGhost
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc0f26d694903314dbf4d89e3ebb0560
+    m_Address: WallBasicGhost
     m_ReadOnly: 0
     m_SerializedLabels:
     - BuildingGhost

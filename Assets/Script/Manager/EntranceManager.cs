@@ -51,10 +51,10 @@ public class EntranceManager : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        SpawnRocks();
+        //SpawnRocks();
 
-        NetworkManager.Singleton.OnClientConnectedCallback += OnPlayerJoined;
-        NetworkManager.Singleton.OnClientDisconnectCallback += OnPlayerLeft;
+        //NetworkManager.Singleton.OnClientConnectedCallback += OnPlayerJoined;
+        //NetworkManager.Singleton.OnClientDisconnectCallback += OnPlayerLeft;
 
         lastPlayerCount = NetworkManager.Singleton.ConnectedClientsList.Count;
     }

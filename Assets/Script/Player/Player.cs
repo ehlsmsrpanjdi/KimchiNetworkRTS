@@ -1,8 +1,8 @@
-﻿using Unity.Netcode;
+using Unity.Netcode;
 using UnityEngine;
 using System.Collections.Generic;
 
-public class Player : NetworkBehaviour
+public class Player : NetworkBehaviour, ITakeDamage
 {
     [Header("Player Identity")]
     public NetworkVariable<ulong> PlayerID = new NetworkVariable<ulong>(
@@ -11,9 +11,17 @@ public class Player : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
+    [Header("Stats")]
+    public NetworkVariable<float> maxHP = new NetworkVariable<float>(100f,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<float> currentHP = new NetworkVariable<float>(100f,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<bool> isDead = new NetworkVariable<bool>(false,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     [Header("Components")]
-    public PlayerController controller;
-    public PlayerResource resource;
+    [SerializeField] public PlayerController controller;
+    [SerializeField] public PlayerResource resource;
 
     [Header("Building Ownership")]
     private Dictionary<BuildingCategory, List<BuildingBase>> ownedBuildings = new Dictionary<BuildingCategory, List<BuildingBase>>();
@@ -21,15 +29,20 @@ public class Player : NetworkBehaviour
     [Header("Augments")]
     public NetworkList<int> ownedCardIDs;
 
+    private void Reset()
+    {
+        controller = this.TryGetComponent<PlayerController>();
+        resource = this.TryGetComponent<PlayerResource>();
+    }
+
     private void Awake()
     {
         ownedCardIDs = new NetworkList<int>();
-    }
 
-    private void Reset()
-    {
-        controller = GetComponent<PlayerController>();
-        resource = GetComponent<PlayerResource>();
+        var rb = GetComponent<Rigidbody>();
+        if (rb == null) rb = gameObject.AddComponent<Rigidbody>();
+        rb.isKinematic = true;
+        rb.useGravity = false;
     }
 
     public override void OnNetworkSpawn()
@@ -39,17 +52,53 @@ public class Player : NetworkBehaviour
         if (IsServer)
         {
             PlayerID.Value = OwnerClientId;
-            PlayerManager.Instance.AddPlayer(OwnerClientId, this); // ✅ 등록
+            currentHP.Value = maxHP.Value;
+            PlayerManager.Instance.AddPlayer(OwnerClientId, this);
         }
 
         if (IsOwner)
         {
-            // ✅ 로컬 플레이어 등록
             PlayerManager.Instance.SetLocalPlayer(this);
-
-            // 내 플레이어 색상 변경 (테스트용)
             GetComponent<Renderer>().material.color = Color.blue;
         }
+
+        isDead.OnValueChanged += OnDeadStateChanged;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+        isDead.OnValueChanged -= OnDeadStateChanged;
+    }
+
+    // ========== ITakeDamage ==========
+    public void TakeDamage(float damage)
+    {
+        if (!IsServer) return;
+        if (isDead.Value) return;
+
+        currentHP.Value = Mathf.Max(0f, currentHP.Value - damage);
+
+        if (currentHP.Value <= 0f)
+            OnDeath();
+    }
+
+    void OnDeath()
+    {
+        isDead.Value = true;
+        LogHelper.Log($"💀 Player {OwnerClientId} died!");
+    }
+
+    void OnDeadStateChanged(bool prev, bool next)
+    {
+        if (!next) return;
+
+        if (controller != null)
+            controller.enabled = false;
+
+        var rend = GetComponent<Renderer>();
+        if (rend != null)
+            rend.material.color = Color.gray;
     }
 
     // ========== 건물 소유 관리 ==========
@@ -57,12 +106,10 @@ public class Player : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        BuildingCategory category = building.GetCategory(); // ✅ 수정
+        BuildingCategory category = building.GetCategory();
 
         if (!ownedBuildings.ContainsKey(category))
-        {
             ownedBuildings[category] = new List<BuildingBase>();
-        }
 
         ownedBuildings[category].Add(building);
     }
@@ -74,17 +121,13 @@ public class Player : NetworkBehaviour
         BuildingCategory type = building.GetCategory();
 
         if (ownedBuildings.ContainsKey(type))
-        {
             ownedBuildings[type].Remove(building);
-        }
     }
 
     public List<BuildingBase> GetBuildingsByType(BuildingCategory type)
     {
         if (ownedBuildings.ContainsKey(type))
-        {
             return ownedBuildings[type];
-        }
         return new List<BuildingBase>();
     }
 }

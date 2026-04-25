@@ -108,11 +108,13 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
     // ========== Trigger 이벤트 ==========
     void OnTriggerEnter(Collider other)
     {
+        LogHelper.Log($"[Trigger] Enter: {other.gameObject.name} | layer: {LayerHelper.Instance.GetObjectLayer(other.gameObject)} | IsServer: {IsServer}");
         if (!IsServer) return;
 
         if (LayerHelper.Instance.GetObjectLayer(other.gameObject) == LayerHelper.PlayerLayer)
         {
             var player = other.GetComponent<Player>();
+            LogHelper.Log($"[Trigger] Player found: {player != null} | ownerMatch: {player?.OwnerClientId == ownerPlayerID.Value}");
             if (player != null && player.OwnerClientId == ownerPlayerID.Value)
             {
                 OnPlayerEnterRange(player);
@@ -136,6 +138,7 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 
     void OnTriggerExit(Collider other)
     {
+        LogHelper.Log($"[Trigger] Exit: {other.gameObject.name}");
         if (!IsServer) return;
 
         if (LayerHelper.Instance.GetObjectLayer(other.gameObject) == LayerHelper.PlayerLayer)
@@ -236,7 +239,10 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 
     protected virtual void OnDeath()
     {
-        // 하위 클래스에서 구현
+        if (data != null && data.IsCoreBuilding)
+        {
+            GameManager.Instance.GameOver();
+        }
     }
 
     void OnHealthChanged(float previousValue, float newValue)

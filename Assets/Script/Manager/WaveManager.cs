@@ -8,7 +8,8 @@ public class WaveManager : NetworkBehaviour
     public static WaveManager Instance;
 
     [Header("Wave Settings")]
-    public Transform spawnPoint;
+    [SerializeField] Transform spawnPoint;
+    public bool debugDisableSpawn = false;
     public int currentWaveNumber = 1;
     public float gameTime = 0f;
 
@@ -25,10 +26,22 @@ public class WaveManager : NetworkBehaviour
     private Dictionary<string, float> nextSpawnTime = new Dictionary<string, float>();
     private float waveStartTime;
 
+    private void Reset()
+    {
+        spawnPoint = transform.Find("SpawnPoint");
+    }
+
     void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        if (spawnPoint == null)
+        {
+            spawnPoint = transform.Find("SpawnPoint");
+            if (spawnPoint == null)
+                LogHelper.LogError("WaveManager/SpawnPoint 가 없습니다.");
+        }
     }
 
     void Update()
@@ -112,6 +125,7 @@ public class WaveManager : NetworkBehaviour
 
     void SpawnMonster(string monsterID)
     {
+        if (debugDisableSpawn) return;
         MonsterData data = MonsterDataManager.Instance.GetData(monsterID);
         if (data == null) { LogHelper.LogError($"MonsterData not found: {monsterID}"); return; }
 

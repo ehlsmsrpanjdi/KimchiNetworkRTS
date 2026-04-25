@@ -16,7 +16,7 @@ MonoBehaviour:
   m_GUID: 0842f80f91aabbb4ba405b39f406a833
   m_SerializeEntries:
   - m_GUID: e69bef2fa50172e4ebc84136eb342f23
-    m_Address: Assets/Prefab/Bullet/BasicBullet.prefab
+    m_Address: BulletSmall
     m_ReadOnly: 0
     m_SerializedLabels:
     - Bullet

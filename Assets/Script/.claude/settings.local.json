@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/SMGit/KimchiNetworkRTS/Assets/StreamingAssets/Data/**)",
+      "Read(//d/SMGit/KimchiNetworkRTS/Assets/Prefab/Building/**)",
+      "Read(//d/SMGit/KimchiNetworkRTS/Assets/Prefab/Monster/**)",
+      "Bash(xargs ls *)"
+    ]
+  }
+}

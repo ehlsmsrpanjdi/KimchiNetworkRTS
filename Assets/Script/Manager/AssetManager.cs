@@ -77,6 +77,7 @@ public class AssetManager
 
         labelToPrefabs[label].Add(prefab);
         nameToPrefab[prefab.name] = prefab;
+        Debug.Log($"✅ Cached: [{label}] name={prefab.name}"); // ← 이 줄 추가
 
         var comp = prefab.GetComponent<MonoBehaviour>();
         if (comp != null)
@@ -110,7 +111,8 @@ public class AssetManager
     // ----------------------------
     public GameObject GetByName(string name)
     {
-        return nameToPrefab.TryGetValue(name, out var prefab) ? prefab : null;
+        string key = name.Contains("/") ? name.Substring(name.LastIndexOf('/') + 1) : name;
+        return nameToPrefab.TryGetValue(key, out var prefab) ? prefab : null;
     }
 
     // ----------------------------

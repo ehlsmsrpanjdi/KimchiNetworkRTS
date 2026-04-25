@@ -85,6 +85,13 @@ public class BuildingGhost : MonoBehaviour
         UpdateVisual();
         CleanupOverlappingObjects();
 
+        // 죽은 플레이어는 설치 불가
+        if (ownerPlayer != null && ownerPlayer.isDead.Value)
+        {
+            CancelPlacement();
+            return;
+        }
+
         // 좌클릭 → 건물 설치
         if (Input.GetMouseButtonDown(0) && isValidPlacement)
         {

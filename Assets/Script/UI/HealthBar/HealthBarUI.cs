@@ -20,15 +20,8 @@ public class HealthBarUI : MonoBehaviour
     private void Reset()
     {
         fillImage = this.TryFindChild("FillImage").GetComponent<Image>();
-    }
-
-    void Awake()
-    {
-        if (rectTransform == null)
-            rectTransform = GetComponent<RectTransform>();
-
-        if (canvasGroup == null)
-            canvasGroup = GetComponent<CanvasGroup>();
+        rectTransform = GetComponent<RectTransform>();
+        canvasGroup = GetComponent<CanvasGroup>();
     }
 
     void Start()
