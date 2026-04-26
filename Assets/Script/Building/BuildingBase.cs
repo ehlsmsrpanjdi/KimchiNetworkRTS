@@ -6,7 +6,7 @@ using System;
 public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 {
     [Header("Building Identity")]
-    public int buildingID;
+    public string buildingID;
 
     [Header("Grid Reference")]
     public Vector2Int gridPosition;
@@ -31,6 +31,14 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
     public event Action<MonsterBase> OnHit;
     public event Action OnDamaged;
 
+    public bool IsDisabled { get; private set; }
+
+    public void SetDisabled(bool disabled)
+    {
+        if (!IsServer) return;
+        IsDisabled = disabled;
+    }
+
     // ========== Unity Lifecycle ==========
     protected virtual void Awake()
     {
@@ -39,24 +47,39 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
         stat = GetComponent<BuildingStat>();
     }
 
+    private string pendingID;
+    private ulong pendingOwnerID;
+    private bool needsInit;
+
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
         stat.currentHP.OnValueChanged += OnHealthChanged;
+
+        if (IsServer && needsInit)
+        {
+            ownerPlayerID.Value = pendingOwnerID;
+            stat.InitializeFromData(data);
+            SetupProximityCollider();
+            OnInitialized();
+            needsInit = false;
+        }
     }
 
     protected virtual void Update()
     {
         if (!IsServer) return;
+        if (IsDisabled) return;
         modifierManager?.Update();
     }
 
     // ========== 초기화 ==========
-    public void Initialize(int id, ulong ownerID, Vector2Int gridPos)
+    public void Initialize(string id, ulong ownerID, Vector2Int gridPos)
     {
         buildingID = id;
-        ownerPlayerID.Value = ownerID;
         gridPosition = gridPos;
+        pendingOwnerID = ownerID;
+        needsInit = true;
 
         data = BuildingDataManager.Instance.GetData(id);
         if (data == null)
@@ -65,17 +88,12 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
             return;
         }
 
-        stat.InitializeFromData(data);
         SetupGrid();
         SetupNavMeshObstacle();
-        SetupProximityCollider();  // ✅ 추가
-
-        OnInitialized();
     }
 
     protected virtual void OnInitialized()
     {
-        // 하위 클래스에서 구현
     }
 
     // ========== Proximity Collider 설정 ==========
@@ -108,11 +126,13 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
     // ========== Trigger 이벤트 ==========
     void OnTriggerEnter(Collider other)
     {
+        LogHelper.Log($"[Trigger] Enter: {other.gameObject.name} | layer: {LayerHelper.Instance.GetObjectLayer(other.gameObject)} | IsServer: {IsServer}");
         if (!IsServer) return;
 
         if (LayerHelper.Instance.GetObjectLayer(other.gameObject) == LayerHelper.PlayerLayer)
         {
             var player = other.GetComponent<Player>();
+            LogHelper.Log($"[Trigger] Player found: {player != null} | ownerMatch: {player?.OwnerClientId == ownerPlayerID.Value}");
             if (player != null && player.OwnerClientId == ownerPlayerID.Value)
             {
                 OnPlayerEnterRange(player);
@@ -136,6 +156,7 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 
     void OnTriggerExit(Collider other)
     {
+        LogHelper.Log($"[Trigger] Exit: {other.gameObject.name}");
         if (!IsServer) return;
 
         if (LayerHelper.Instance.GetObjectLayer(other.gameObject) == LayerHelper.PlayerLayer)
@@ -236,7 +257,10 @@ public class BuildingBase : NetworkBehaviour, ITakeDamage, IPoolObj
 
     protected virtual void OnDeath()
     {
-        // 하위 클래스에서 구현
+        if (data != null && data.IsCoreBuilding)
+        {
+            GameManager.Instance.GameOver();
+        }
     }
 
     void OnHealthChanged(float previousValue, float newValue)

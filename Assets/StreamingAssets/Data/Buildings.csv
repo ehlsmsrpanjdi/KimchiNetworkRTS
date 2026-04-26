@@ -1,0 +1,8 @@
+BuildingId,Name,Category,SizeX,SizeY,BuildCost_ResourceId,BuildCost,MaxHP,Armor,CanAttack,Damage,DamageType,Range,FireRate,FireCount,TargetingRule,SplashRadius,BulletSpeed,BulletMovement ID,ResourceGen_ResourceId,TradeEnabled,PrefabKey,BulletPrefabKey,IconKey,Description
+CORE_HQ_01,�ھ� ���,Core,5,5,Iron,0,10000,0,FALSE,0,None,0,0,0,,0,0,,,FALSE,Buildings/Core/CoreHQ,,ico_core_hq,�ı��Ǹ� ���� ����. �ֺ� �ǹ��� ����(������) ���� ������ �����մϴ�.
+WALL_BASIC,�⺻ ��,Wall,1,1,Iron,15,500,0,FALSE,0,None,3,0,0,,0,0,,Iron,FALSE,Buildings/Walls/WallBasic,,ico_wall_basic,���� ������ ���� �������Դϴ�.
+TOWER_BASIC,�⺻ Ÿ��,Tower,1,1,Iron,30,200,0,TRUE,10,Physical,5,0.18,1,Nearest,0,18,Straight,Iron,FALSE,Buildings/Towers/TowerBasic,Bullets/BulletSmall,ico_tower_basic,���� ����� ���� ��󿡰� ���� ���ظ� �ݴϴ�. (FireRate=���� ���� ��)
+TRAP_BASIC,����,Trap,1,1,Iron,50,1,0,TRUE,50,Physical,1,0,1,Nearest,1.5,0,Instant,,FALSE,Buildings/Traps/TrapBasic,,ico_trap_basic,���� ������ �����մϴ�. (�ܹ߼�)
+RESOURCE_BASIC,�ڿ���,Resource,2,2,Iron,100,350,0,FALSE,60,None,3,1,0,,0,0,,Iron,FALSE,Buildings/Resource/ResourceBasic,,ico_res_basic,"ö��  �����մϴ�.
+(FireRate=�ʴ� ���귮, Damage=����/�ִ� ���귮 �ѵ�)"
+UTILITY_MARKET_01,�ŷ���,Utility,3,3,Iron,150,5000,0,FALSE,0,None,0,0,0,,0,0,,,TRUE,Buildings/Utility/Market,,ico_util_market,�ڿ��� ��ȯ�մϴ�. (TradeEnabled=TRUE)

@@ -1,0 +1,15 @@
+UpgradeId,Name,AppliesToBuildingId,Tier,Cost_ResourceId,Cost,MaxStacks,PrereqUpgradeId,MutatorType,StatKey,Op,Value,ExclusiveGroup,IconKey,Description
+UPG_CORE_HP,코어 강화,CORE_HP,1,Iron,100,9999,,StatAdd,MaxHP,Add,500,,ico_upg_core_hp,코어 최대 체력 +500
+UPG_CORE_ARM,코어 장갑,CORE_ARM,1,Iron,100,9999,,StatAdd,Armor,Add,2,,ico_upg_core_arm,코어 방어력 +2
+UPG_WALL_HP,벽 보강,WALL_HP,1,Iron,10,9999,,StatAdd,MaxHP,Add,200,,ico_upg_wall_hp,기본 벽 최대 체력 +200
+UPG_WALL_ARM,벽 장갑,WALL_ARM,1,Iron,10,9999,,StatAdd,Armor,Add,1,,ico_upg_wall_arm,기본 벽 방어력 +1
+UPG_REGEN_RATE,재생 강화,WALL_REGEN,1,Iron,10,9999,,StatAdd,Damage,Add,1,,ico_upg_wall_regen,재생 벽 초당 회복량 +1
+UPG_TOWER_DMG,타워 공격 강화,TOWER_DMG,1,Iron,10,9999,,StatAdd,Damage,Add,2,,ico_upg_tower_dmg,타워 피해 +2
+UPG_TOWER_FR,타워 공속 강화,TOWER_FR,1,Iron,10,9999,,StatMul,FireRate,Mul,0.9,,ico_upg_tower_fr,타워 공격 간격 10% 감소(더 빠름)
+UPG_TOWER_SRL,폭발 반경 강화,TOWER_SRL,1,Iron,10,9999,,StatAdd,SplashRadius,Add,0.3,,ico_upg_tower_s기,폭발 반경 +0.3
+UPG_TOWER_RANGE,사거리 강화,TOWER_RANGE,2,Iron,10,9999,,StatAdd,Range,Add,1,,ico_upg_tower_range,사거리 +1
+UPG_TRAP_DMG,지뢰 공격 강화,TRAP_DMG,1,Iron,10,9999,,StatAdd,Damage,Add,15,,ico_upg_trap_dmg,지뢰 피해 +15
+UPG_TRAP_SPL,파편 확장,TRAP_SPL,1,Iron,10,9999,,StatAdd,SplashRadius,Add,0.3,,ico_upg_trap_spl,지뢰 폭발 반경 +0.3
+UPG_Metal_GEN,채굴 효율 ,RESOURCE_GEN,1,Iron,10,9999,,StatMul,FireRate,Mul,1.15,,ico_upg_metal_gen,철 초당 생산량 +15%
+UPG_Metal_CAP,저장 탱크,RESOURCE_CAP,1,Iron,10,9999,,StatAdd,Damage,Add,100,,ico_upg_metal_cap,철 최대 저장/한도 +100 (Damage=한도)
+UPG_MARKET_FEE,거래 수수료 절감,UTILITY_MARKET_01,1,Iron,10,9999,,StatMul,Cost,Mul,0.9,,ico_upg_market_fee,거래 수수료 10% 감소(구현 시 Cost 키를 거래모듈에서 해석)

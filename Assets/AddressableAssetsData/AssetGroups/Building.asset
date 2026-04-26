@@ -15,20 +15,38 @@ MonoBehaviour:
   m_GroupName: Building
   m_GUID: 6658618bb1d25b64cbfa6b3deb0b1343
   m_SerializeEntries:
-  - m_GUID: 9148db582910245408095a2ebf103e86
-    m_Address: IronMine
+  - m_GUID: 0f3ed5245ed128d489ddc629464b5043
+    m_Address: Market
     m_ReadOnly: 0
     m_SerializedLabels:
     - Building
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 955f359e60e84c44c838c4a290ae18fa
-    m_Address: AttackTower
+  - m_GUID: 2659f96d27d090e49825dbfecf67d5e1
+    m_Address: TrapBasic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Building
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 731ad96507477bf489f55a311dc16592
+    m_Address: WallBasic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Building
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7cba700c45a32204d897e006d686e893
+    m_Address: TowerBasic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Building
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7ec319ca6250e9440beec770240a40f6
+    m_Address: ResourceBasic
     m_ReadOnly: 0
     m_SerializedLabels:
     - Building
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e0ccc8d842e789c4bb9f23b289d911fe
-    m_Address: Wall
+    m_Address: CoreHQ
     m_ReadOnly: 0
     m_SerializedLabels:
     - Building

@@ -22,15 +22,15 @@ public class BuildingButtonsUI : UIBase
         RemoveAllButton();
 
         // BuildingDataManager에서 해당 카테고리의 건물 ID 가져오기
-        List<int> buildingIDs = BuildingDataManager.Instance.GetBuildingIDsByCategory(category);
+        List<string> buildingIDs = BuildingDataManager.Instance.GetBuildingIDsByCategory(category);
 
-        foreach (int buildingID in buildingIDs)
+        foreach (string buildingID in buildingIDs)
         {
             AddButton(buildingID);
         }
     }
 
-    void AddButton(int buildingID)
+    void AddButton(string buildingID)
     {
         GameObject buttonObj = Instantiate(buildingButtonUIPrefab, gridLayoutGroup.transform);
         BuildingButtonUI button = buttonObj.GetComponent<BuildingButtonUI>();

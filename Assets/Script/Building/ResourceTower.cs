@@ -8,7 +8,6 @@ using System.Collections.Generic;
 public class ResourceTower : BuildingBase
 {
     [Header("Resource Settings")]
-    private ResourceType resourceType;
     private float maxStack;
     private float stackGainRate;
     private float harvestDuration;
@@ -71,10 +70,10 @@ public class ResourceTower : BuildingBase
 
         int amount = Mathf.FloorToInt(currentStack.Value);
 
-        player.resource.AddResource(resourceType, amount);
+        player.resource.AddResource(amount);
         currentStack.Value = 0f;
 
-        LogHelper.Log($"🌾 Player {player.OwnerClientId} harvested {amount} {resourceType}");
+        LogHelper.Log($"🌾 Player {player.OwnerClientId} harvested {amount} Iron");
     }
 
     // ========== 초기화 ==========
@@ -84,10 +83,9 @@ public class ResourceTower : BuildingBase
 
         if (data != null && data.category == BuildingCategory.Resource)
         {
-            resourceType = data.resourceType;
-            maxStack = data.baseAttackDamage;
-            stackGainRate = data.baseAttackSpeed;
-            harvestDuration = data.harvestDuration;
+            maxStack = data.baseDamage;
+            stackGainRate = data.baseFireRate;
+            harvestDuration = data.baseRange;
 
             isInitialized = true;
             LogHelper.Log($"✅ ResourceTower initialized: {data.displayName}");

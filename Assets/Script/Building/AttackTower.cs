@@ -114,11 +114,11 @@ public class AttackTower : BuildingBase
 
     float GetTargetPriority(MonsterBase monster, float distance)
     {
-        return data.attackPriority switch
+        return data.targetingRule switch
         {
-            AttackPriority.Nearest => distance,
-            AttackPriority.LowestHP => monster.currentHP.Value,
-            AttackPriority.Strongest => -monster.maxHP.Value,
+            TargetingRule.Nearest => distance,
+            TargetingRule.LowestHP => monster.currentHP.Value,
+            TargetingRule.Strongest => -monster.maxHP.Value,
             _ => distance
         };
     }
@@ -158,12 +158,12 @@ public class AttackTower : BuildingBase
 
     public void FireBullet(MonsterBase target)
     {
-        string bulletPrefabName = GetBulletPrefabName(data.bulletPrefabID);
-        GameObject bulletPrefab = AssetManager.Instance.GetByName(bulletPrefabName);
+        // bulletPrefabKey 직접 사용
+        GameObject bulletPrefab = AssetManager.Instance.GetByName(data.bulletPrefabKey);
 
         if (bulletPrefab == null)
         {
-            LogHelper.LogError($"Bullet prefab not found: {bulletPrefabName}");
+            LogHelper.LogError($"Bullet prefab not found: {data.bulletPrefabKey}");
             return;
         }
 
@@ -179,39 +179,23 @@ public class AttackTower : BuildingBase
 
         if (bullet == null)
         {
-            LogHelper.LogError($"BulletBase missing on {bulletPrefabName}");
+            LogHelper.LogError($"BulletBase missing on {data.bulletPrefabKey}");
             return;
         }
 
         float finalDamage = stat.GetFinalAttackDamage(modifierManager);
-        bullet.Initialize(
-            this,
-            target,
-            finalDamage,
-            data.bulletMovementID,
-            data.bulletSpeed
-        );
+        bullet.Initialize(this, target, finalDamage, data.bulletSpeed);
 
         netObj.Spawn();
     }
 
-    string GetBulletPrefabName(int bulletID)
-    {
-        return bulletID switch
-        {
-            1 => "BasicBullet",
-            2 => "MagicBullet",
-            3 => "RocketBullet",
-            _ => "BasicBullet"
-        };
-    }
 
     // ========== 초기화 ==========
     protected override void OnInitialized()
     {
         base.OnInitialized();
 
-        if (data != null && data.isAttackTower)
+        if (data != null && data.canAttack)
         {
             isInitialized = true;
             LogHelper.Log($"✅ AttackTower initialized: {data.displayName}");

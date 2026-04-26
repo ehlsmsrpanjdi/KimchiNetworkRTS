@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class BuildingGhost : MonoBehaviour
 {
     [Header("Building Info")]
-    public int buildingID;
+    public string buildingID;
     private BuildingData data;
 
     [Header("Grid")]
@@ -84,6 +84,13 @@ public class BuildingGhost : MonoBehaviour
         FollowMouse();
         UpdateVisual();
         CleanupOverlappingObjects();
+
+        // 죽은 플레이어는 설치 불가
+        if (ownerPlayer != null && ownerPlayer.isDead.Value)
+        {
+            CancelPlacement();
+            return;
+        }
 
         // 좌클릭 → 건물 설치
         if (Input.GetMouseButtonDown(0) && isValidPlacement)

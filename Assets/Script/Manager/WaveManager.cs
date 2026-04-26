@@ -1,4 +1,4 @@
-﻿using Unity.Netcode;
+using Unity.Netcode;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,213 +8,199 @@ public class WaveManager : NetworkBehaviour
     public static WaveManager Instance;
 
     [Header("Wave Settings")]
-    public Transform spawnPoint; // 몬스터 스폰 위치
-    public int currentWaveID = 1;
-    public float gameTime = 0f; // 게임 경과 시간 (분 단위 스케일링용)
+    [SerializeField] Transform spawnPoint;
+    public bool debugDisableSpawn = false;
+    public int currentWaveNumber = 1;
+    public float gameTime = 0f;
+
+    [Header("Card Selection Trigger")]
+    [Tooltip("몇 웨이브마다 카드 선택 화면을 띄울지 (기본값 1 = 매 웨이브 종료마다)")]
+    public int cardSelectEveryNWaves = 1;
 
     [Header("Wave State")]
-    public NetworkVariable<int> currentWaveNumber = new NetworkVariable<int>(0);
+    public NetworkVariable<int> currentWaveNum = new NetworkVariable<int>(0);
     public NetworkVariable<bool> isWaveActive = new NetworkVariable<bool>(false);
+    public NetworkVariable<float> nextWaveCountdown = new NetworkVariable<float>(0f);
 
     private WaveData currentWaveData;
-    private Dictionary<int, int> spawnedCount = new Dictionary<int, int>(); // 몬스터ID별 스폰된 수
-    private Dictionary<int, float> nextSpawnTime = new Dictionary<int, float>(); // 몬스터ID별 다음 스폰 시간
+    private Dictionary<string, int> spawnedCount = new Dictionary<string, int>();
+    private Dictionary<string, float> nextSpawnTime = new Dictionary<string, float>();
     private float waveStartTime;
-    private bool bossSpawned = false;
+
+    private void Reset()
+    {
+        spawnPoint = transform.Find("SpawnPoint");
+    }
 
     void Awake()
     {
-        if (Instance == null)
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+
+        if (spawnPoint == null)
         {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
+            spawnPoint = transform.Find("SpawnPoint");
+            if (spawnPoint == null)
+                LogHelper.LogError("WaveManager/SpawnPoint 가 없습니다.");
         }
     }
 
     void Update()
     {
         if (!IsServer) return;
-
-        // 게임 시간 업데이트
         gameTime += Time.deltaTime;
-
-        // 웨이브 진행 중이면 몬스터 스폰
-        if (isWaveActive.Value)
-        {
-            UpdateWaveSpawning();
-        }
+        if (isWaveActive.Value) UpdateWaveSpawning();
     }
 
     // ========== 웨이브 시작 ==========
+
     [Rpc(SendTo.Server)]
     public void StartWaveServerRpc()
     {
-        if (!IsServer) return;
+        if (!IsServer || isWaveActive.Value) return;
 
-        if (isWaveActive.Value)
-        {
-            LogHelper.LogWarrning("Wave already active!");
-            return;
-        }
-
-        // WaveData 로드
-        currentWaveData = WaveDataManager.Instance.GetData(currentWaveID);
+        currentWaveData = WaveDataManager.Instance.GetData(currentWaveNumber);
         if (currentWaveData == null)
         {
-            LogHelper.LogError($"WaveData not found: {currentWaveID}");
+            LogHelper.LogError($"WaveData not found: wave {currentWaveNumber}");
             return;
         }
 
-        // 웨이브 상태 초기화
         isWaveActive.Value = true;
-        currentWaveNumber.Value = currentWaveData.waveNumber;
+        currentWaveNum.Value = currentWaveData.waveNumber;
+        nextWaveCountdown.Value = 0f;
         waveStartTime = Time.time;
-        bossSpawned = false;
 
         spawnedCount.Clear();
         nextSpawnTime.Clear();
 
-        // 각 몬스터 타입별 초기화
-        int playerCount = NetworkManager.Singleton.ConnectedClientsList.Count;
-        foreach (var spawnInfo in currentWaveData.spawnInfos)
+        foreach (var info in currentWaveData.spawnInfos)
         {
-            spawnedCount[spawnInfo.monsterID] = 0;
-            nextSpawnTime[spawnInfo.monsterID] = Time.time;
+            spawnedCount[info.monsterID] = 0;
+            nextSpawnTime[info.monsterID] = Time.time;
         }
 
-        LogHelper.Log($"✅ Wave {currentWaveData.waveNumber} started! (Duration: {currentWaveData.waveDuration}s, Players: {playerCount})");
+        LogHelper.Log($"✅ Wave {currentWaveData.waveNumber} started!");
     }
 
-    // ========== 웨이브 스폰 업데이트 ==========
+    // ========== 스폰 업데이트 ==========
+
     void UpdateWaveSpawning()
     {
-        float elapsedTime = Time.time - waveStartTime;
         int playerCount = NetworkManager.Singleton.ConnectedClientsList.Count;
+
+        // 몬스터 카드 "증식" 효과 누적 배율 적용
+        float countMultiplier = CardManager.Instance.GetMonsterCountMultiplier();
 
         bool allSpawned = true;
 
-        // 각 몬스터 타입별로 스폰
-        foreach (var spawnInfo in currentWaveData.spawnInfos)
+        foreach (var info in currentWaveData.spawnInfos)
         {
-            int monsterID = spawnInfo.monsterID;
-            int totalCount = currentWaveData.GetTotalSpawnCount(monsterID, playerCount);
-            float spawnInterval = currentWaveData.GetSpawnInterval(monsterID, playerCount);
+            string monsterID = info.monsterID;
 
-            // 아직 스폰할 몬스터가 남아있으면
+            int totalCount = Mathf.RoundToInt(
+                (info.countBase + info.countPerPlayer * playerCount) * countMultiplier
+            );
+
+            float spawnInterval = info.spawnIntervalSec;
+
             if (spawnedCount[monsterID] < totalCount)
             {
                 allSpawned = false;
 
-                // 스폰 시간이 되었으면
                 if (Time.time >= nextSpawnTime[monsterID])
                 {
                     SpawnMonster(monsterID);
                     spawnedCount[monsterID]++;
                     nextSpawnTime[monsterID] = Time.time + spawnInterval;
-
-                    LogHelper.Log($"Spawned monster {monsterID} ({spawnedCount[monsterID]}/{totalCount})");
                 }
             }
         }
 
-        // 모든 일반 몬스터 스폰 완료 + 보스 있으면 보스 스폰
-        if (allSpawned && currentWaveData.HasBoss() && !bossSpawned)
+        if (allSpawned && MonsterManager.Instance.AreAllMonstersDead())
         {
-            SpawnMonster(currentWaveData.bossMonsterID);
-            bossSpawned = true;
-            LogHelper.Log($"🔥 Boss spawned: {currentWaveData.bossMonsterID}");
-        }
-
-        // 스폰 완료 + 모든 몬스터 죽음 = 웨이브 종료
-        if (allSpawned && (!currentWaveData.HasBoss() || bossSpawned))
-        {
-            if (MonsterManager.Instance.AreAllMonstersDead())
-            {
-                EndWave();
-            }
+            EndWave();
         }
     }
 
     // ========== 몬스터 스폰 ==========
-    void SpawnMonster(int monsterID)
+
+    void SpawnMonster(string monsterID)
     {
+        if (debugDisableSpawn) return;
         MonsterData data = MonsterDataManager.Instance.GetData(monsterID);
-        if (data == null)
-        {
-            LogHelper.LogError($"MonsterData not found: {monsterID}");
-            return;
-        }
+        if (data == null) { LogHelper.LogError($"MonsterData not found: {monsterID}"); return; }
 
-        string prefabName = data.prefabName;
-        GameObject prefab = AssetManager.Instance.GetByName(prefabName);
-        if (prefab == null)
-        {
-            LogHelper.LogError($"Monster prefab not found: {prefabName}");
-            return;
-        }
+        GameObject prefab = AssetManager.Instance.GetByName(data.prefabKey);
+        if (prefab == null) { LogHelper.LogError($"Monster prefab not found: {data.prefabKey}"); return; }
 
-        // 스폰 위치 (약간 랜덤)
         Vector3 spawnPos = spawnPoint.position + new Vector3(
-            Random.Range(-2f, 2f),
-            0f,
-            Random.Range(-2f, 2f)
+            Random.Range(-2f, 2f), 0f, Random.Range(-2f, 2f)
         );
 
-        // Instantiate
         GameObject monsterGo = Instantiate(prefab, spawnPos, Quaternion.identity);
         var netObj = monsterGo.GetComponent<NetworkObject>();
         var monster = monsterGo.GetComponent<MonsterBase>();
 
-        if (monster == null)
-        {
-            LogHelper.LogError($"MonsterBase missing on {prefabName}");
-            Destroy(monsterGo);
-            return;
-        }
+        if (monster == null) { LogHelper.LogError($"MonsterBase missing on {data.prefabKey}"); Destroy(monsterGo); return; }
 
-        // Initialize
-        monster.Initialize(monsterID, gameTime);
-
-        // Spawn
+        monster.Initialize(monsterID, currentWaveNumber);
         netObj.Spawn();
     }
 
     // ========== 웨이브 종료 ==========
+
     void EndWave()
     {
         isWaveActive.Value = false;
         LogHelper.Log($"✅ Wave {currentWaveData.waveNumber} completed!");
 
-        // ✅ 증강 선택 UI 표시
-        AugmentManager.Instance.ShowAugmentSelectionServerRpc();
+        // cardSelectEveryNWaves 웨이브마다 카드 선택
+        // ex) cardSelectEveryNWaves = 3 → 3, 6, 9... 웨이브 종료 후 카드 선택
+        bool shouldShowCards = (currentWaveNumber % cardSelectEveryNWaves == 0);
 
-        // 다음 웨이브 준비
-        currentWaveID++;
+        if (shouldShowCards)
+        {
+            int cardChoices = currentWaveData.cardChoices;
+            CardManager.Instance.OnWaveEndServerRpc(cardChoices);
+            LogHelper.Log($"🃏 Card selection triggered (wave {currentWaveNumber})");
+        }
+        else
+        {
+            LogHelper.Log($"⏭ No card selection this wave (next at wave {GetNextCardWave()})");
+        }
 
-        // 30초 후 자동 시작
-        StartCoroutine(StartNextWaveAfterDelay(30f));
+        currentWaveNumber++;
+        StartCoroutine(StartNextWaveAfterDelay(shouldShowCards ? 30f : 10f));
     }
 
+    /// <summary>
+    /// 다음 카드 선택이 발생하는 웨이브 번호 반환 (로그/UI 표시용)
+    /// </summary>
+    int GetNextCardWave()
+    {
+        return (Mathf.FloorToInt((float)currentWaveNumber / cardSelectEveryNWaves) + 1) * cardSelectEveryNWaves;
+    }
 
     IEnumerator StartNextWaveAfterDelay(float delay)
     {
-        LogHelper.Log($"⏰ Next wave starts in {delay} seconds...");
-
-        yield return new WaitForSeconds(delay);
-
-        // 다음 웨이브 데이터 확인
-        var nextWaveData = WaveDataManager.Instance.GetData(currentWaveID);
-        if (nextWaveData != null)
+        LogHelper.Log($"⏰ Next wave in {delay}s...");
+        float remaining = delay;
+        while (remaining > 0f)
         {
-            LogHelper.Log($"🔥 Starting Wave {nextWaveData.waveNumber}!");
+            nextWaveCountdown.Value = remaining;
+            yield return new WaitForSeconds(1f);
+            remaining -= 1f;
+        }
+        nextWaveCountdown.Value = 0f;
+
+        if (WaveDataManager.Instance.HasWave(currentWaveNumber))
+        {
             StartWaveServerRpc();
         }
         else
         {
-            LogHelper.Log($"🎉 All waves completed! Victory!");
+            LogHelper.Log("🎉 All waves completed! Victory!");
         }
     }
 }

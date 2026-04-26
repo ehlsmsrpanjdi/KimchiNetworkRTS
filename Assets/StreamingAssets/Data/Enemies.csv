@@ -1,0 +1,12 @@
+EnemyId,Name,Archetype,MaxHP,Armor,MoveSpeed,AttackDamage,AttackRange,AttackRate,Reward_ResourceId,RewardAmount,StatRate,PrefabKey,IconKey,Description
+ENEMY_GRUNT_01,추적자,Melee,70,0,2.6,8,1.2,1.2,Iron,2,0.06,Enemies/Grunt,ico_enemy_grunt,기본 근접 적. 수가 많습니다.
+ENEMY_RUNNER_01,질주자,Melee,55,0,3.6,6,1,1,Iron,2,0.07,Enemies/Runner,ico_enemy_runner,빠르게 돌파합니다. 감속에 약합니다.
+ENEMY_TANK_01,중장갑,Tank,220,4,1.7,12,1.2,1.6,Iron,3,0.08,Enemies/Tank,ico_enemy_tank,높은 체력/방어력. 단일 화력 시험용.
+ENEMY_RANGED_01,사수,Ranged,90,1,2.3,10,4,1.4,Iron,3,0.07,Enemies/Ranged,ico_enemy_ranged,원거리 공격. 후방에서 코어를 견제합니다.
+ENEMY_BOMBER_01,폭파병,Melee,95,0,2.4,24,1,2,Iron,3,0.08,Enemies/Bomber,ico_enemy_bomber,건물에 큰 피해를 줍니다. 우선 타겟 권장.
+ENEMY_SHIELDED_01,방패병,Tank,140,3,2,9,1.2,1.4,Iron,3,0.08,Enemies/Shielded,ico_enemy_shielded,전방 방어가 강합니다. 후방/광역 대응 권장.
+ENEMY_HEALER_01,수복자,Support,110,1,2.1,0,0,0,Iron,3,0.08,Enemies/Healer,ico_enemy_healer,주변 적을 회복합니다. (공격 대신 힐 AI로 구현)
+ENEMY_ELITE_01,정예 병기,Melee,180,2,2.8,14,1.2,1.1,Iron,5,0.09,Enemies/Elite,ico_enemy_elite,중반 난이도 상승용 정예 유닛.
+ENEMY_BRUISER_01,분쇄자,Tank,320,5,1.5,18,1.4,1.8,Iron,6,0.1,Enemies/Bruiser,ico_enemy_bruiser,후반 라인 붕괴를 유도하는 탱커.
+BOSS_WARDEN_01,수호자(보스),Boss,2200,8,1.6,40,2,2.2,Iron,30,0.12,Enemies/BossWarden,ico_boss_warden,보스. 광역 공격/소환 패턴을 추가하기 좋습니다.
+BOSS_SWARM_01,군집핵(보스),Boss,1600,4,2.2,28,1.8,1.6,Iron,28,0.12,Enemies/BossSwarm,ico_boss_swarm,보스. 소환 + 고속 돌파 패턴에 적합합니다.
